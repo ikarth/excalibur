@@ -9,6 +9,7 @@ import re
 import spacy
 import textacy
 import pycorpora
+import numpy
 
 from enum import Enum
 
@@ -66,6 +67,7 @@ def filterAndCleanText(text):
     text = text.replace(". . .","…") ## ellipsis
     text = text.replace("Mlle.","Mlle·") # French abbreviations trip up the parser
     text = text.replace("Sir Andrew Ffoulkes, Bart.", "Sir Andrew Ffoulkes, Bart·")
+    text = text.replace("`","'") ## annoying backtick-for-quote
     return text
 
 def stripGutenberg(filenumber):
@@ -258,6 +260,36 @@ class SourceAction(object):
             #    anno[tok_index] = TokenAnnotation.object
         self._annotation = anno                
         return anno
+    
+    @property
+    def primeverb(self):
+        """
+        Returns the primary verb in the sentence, if it can find one.
+        """
+        pverb = self.sentence.root
+        if self.main_verbs:
+            if 1 == len(self.main_verbs) > 1:
+                pverb = self.main_verbs[0]
+        else:
+            if self.sentence.root.pos == VERB:
+                pverb = self.sentence.root
+            else:
+                pverb = None
+        return pverb
+        
+    @property
+    def verbVector(self):
+        return self.primeverb.vector
+        
+    @property
+    def avgVector(self):
+        """
+        Returns the average of all the vectors for the words in the sentence...
+        """
+        return numpy.ndarray.mean([wrd.vector for wrd in self.sentence])
+        
+
+        
         
 def filterSentence(sent):
     """
@@ -338,17 +370,35 @@ def makeVerbDictionary(actions):
     """
     verb_dict = {}
     for a in actions:
-        lem = a.sentence.root.lemma_
-        if a.main_verbs:
-            if 1 == len(a.main_verbs) > 1:
-                lem = a.main_verbs[0].lemma_
-        else:
-            if a.sentence.root.pos == VERB:
-                lem = a.sentence.root.lemma_
-            else:
-                lem = None
-        preva = verb_dict.get(lem, [])            
-        preva.extend([a.sentence.text])
-        verb_dict.update({lem: preva})
+        if a.primeverb:
+            lem = a.primeverb.lemma_
+            preva = verb_dict.get(lem, [])            
+            preva.extend([a])
+            verb_dict.update({lem: preva})
     return verb_dict
+
+if not 'spacy_nlp' in globals():
+    spacy_nlp = spacy.load('en')
     
+def compareVerbs(verb, act):
+    if verb and act:
+        if not act.primeverb is None:
+            try:
+                return verb.similarity(act.primeverb)
+            except AttributeError:
+                return 0            
+    return 0
+    
+    
+def findNearbyVerbs(verb, actions):
+    """
+    Returns the words/actions from the action list that are closest to the target word
+    """
+
+    verbdoc = spacy_nlp(verb)
+    action_ranking = [[a, compareVerbs(verbdoc[0], a)] for a in actions]
+    return sorted(action_ranking, key=lambda act: act[1], reverse=True)
+
+def findVerbCloseness(verb, actions):
+    verbdoc = spacy_nlp(verb)
+    return [max(0, compareVerbs(verbdoc[0], act)) for act in actions]

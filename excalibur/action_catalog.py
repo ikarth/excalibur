@@ -2,6 +2,7 @@
 
 import sourcing
 import textacy
+import numpy
 
 
 action_texts = [60, 1184, 2741, 53125, 2681, 259, 2759, 1257  ]
@@ -15,7 +16,33 @@ pirates = [25982,21072,21073,21072,21813,21692,21062,24783,17563,10727,24914,107
 
 pirate_corpus = sourcing.getTextCorpus(pirates)
 pirate_actions = sourcing.getActionCorpus(pirate_corpus)
-pirate_verbs = sourcing.makeVerbDictionary(pirate_actions)
+#pirate_verbs = sourcing.makeVerbDictionary(pirate_actions)
+
+arthur_corpus = sourcing.getTextCorpus(arthurian)
+arthur_actions = sourcing.getActionCorpus(arthur_corpus)
+
+medieval_corpus = sourcing.getTextCorpus(medieval_town_series)
+mediveal_actions = sourcing.getActionCorpus(medieval_corpus)
+
+virgil_corpus = sourcing.getTextCorpus(virgil_and_homer)
+virgil_actions = sourcing.getActionCorpus(virgil_corpus)
 
 
+current_actions = pirate_actions
 
+def getSentences(word):
+    return sourcing.findNearbyVerbs(word, current_actions)
+
+def sampleSentences(word):
+    #sents = getSentences(word)
+    prob = sourcing.findNearbyVerbs(word, current_actions)
+    if len(prob) > 100:
+        prob = prob[:100]
+    probsum = sum([p[1] for p in prob])
+    pl = [ (p[1] / probsum) for p in prob]
+    #sl = zip(range(len(prob)), [p[0] for p in prob])
+    #slo = [p[0] for p in sl]
+    sp = [p[0] for p in prob]
+    select = numpy.random.choice(sp, p=pl, replace=False)
+    return select #prob[select][0]
+    #return sourcing.findVerbCloseness(word, current_actions)
