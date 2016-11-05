@@ -46,3 +46,30 @@ def sampleSentences(word):
     select = numpy.random.choice(sp, p=pl, replace=False)
     return select #prob[select][0]
     #return sourcing.findVerbCloseness(word, current_actions)
+    
+def nounChunks(corpus):
+    chunks = set()
+    for d in corpus:
+        chunks = chunks.union(set([n.text for n in textacy.extract.noun_chunks(d)]))
+    return chunks
+    
+def writeNouns(corpus):
+    nouns = list(nounChunks(corpus))
+    textacy.fileio.write_file_lines(nouns, "noun_list.txt", encoding="utf8")
+
+def writeVerbs(actions):
+    verbs = set()
+    for a in actions:
+        if a.primeverb:
+            verbs = verbs.union(set([a.primeverb.lemma_]))
+    textacy.fileio.write_file_lines(verbs, "verb_list.txt", encoding="utf8")
+
+def writeSentences(actions):
+    sents = [a.sentence.text for a in actions]
+    textacy.fileio.write_file_lines(sents, "sent_list.txt", encoding="utf8")
+
+    
+#def replaceNouns(sent):
+#    for tok in sent:
+        # find nsubj and replace it (or its phrase) with #SUBJECT#
+        # look for NNPS, categorize it as appropreate...

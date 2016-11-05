@@ -65,6 +65,7 @@ def filterAndCleanText(text):
     Make some simple alterations to the text, to make it easier to parse
     """
     text = text.replace(". . .","…") ## ellipsis
+    text = text.replace("Capt.","Captain") # French abbreviations trip up the parser
     text = text.replace("Mlle.","Mlle·") # French abbreviations trip up the parser
     text = text.replace("Sir Andrew Ffoulkes, Bart.", "Sir Andrew Ffoulkes, Bart·")
     text = text.replace("`","'") ## annoying backtick-for-quote
@@ -286,10 +287,14 @@ class SourceAction(object):
         """
         Returns the average of all the vectors for the words in the sentence...
         """
-        return numpy.ndarray.mean([wrd.vector for wrd in self.sentence])
-        
+        return numpy.ndarray.mean([wrd.vector for wrd in self.sentence])              
 
-        
+    def replaceNouns(self):
+        """
+        Returns the sentence with the nouns replaced with variable indicators.
+        """
+        textacy.extract.named_entities
+        return self.sentence
         
 def filterSentence(sent):
     """
@@ -402,3 +407,6 @@ def findNearbyVerbs(verb, actions):
 def findVerbCloseness(verb, actions):
     verbdoc = spacy_nlp(verb)
     return [max(0, compareVerbs(verbdoc[0], act)) for act in actions]
+            
+            
+    
