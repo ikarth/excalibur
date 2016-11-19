@@ -10,6 +10,7 @@ import spacy
 import textacy
 import pycorpora
 import numpy
+import badwords
 
 from enum import Enum
 
@@ -27,7 +28,8 @@ if not 'cache' in globals():
     cache = gutenberg.acquire.metadata.SleepycatMetadataCache('./data/gutenberg/metadata/cache.sqlite')
     gutenberg.acquire.set_metadata_cache(cache)
 
-corpus_guten = nltk.corpus.reader.plaintext.PlaintextCorpusReader(settings.GUTENBERG_CORPUS, fileids = r'.*\.txt', encoding="utf-8")
+if not 'corpus_guten' in globals():
+    corpus_guten = nltk.corpus.reader.plaintext.PlaintextCorpusReader(settings.GUTENBERG_CORPUS, fileids = r'.*\.txt', encoding="utf-8")
 
 def countWords(filename):
     return len(list(corpus_guten.words(filename)))
@@ -69,6 +71,9 @@ def filterAndCleanText(text):
     text = text.replace("Mlle.","Mlle·") # French abbreviations trip up the parser
     text = text.replace("Sir Andrew Ffoulkes, Bart.", "Sir Andrew Ffoulkes, Bart·")
     text = text.replace("`","'") ## annoying backtick-for-quote
+    text = text.replace("“","\"") 
+    text = text.replace("”","\"") 
+    text = badwords.filterBadWords(text)
     return text
 
 def stripGutenberg(filenumber):
@@ -76,8 +81,8 @@ def stripGutenberg(filenumber):
     textfile = gutenberg.acquire.load_etext(filenumber)
     text = gutenberg.cleanup.strip_headers(textfile).strip()
     text = unwrapText(text)
-    text = removeDialogue(text)
     text = filterAndCleanText(text)
+    #text = removeDialogue(text)
     with open("./data/corpora/gutenberg/strip/{}.txt".format(filenumber), mode="w", encoding="utf_8", newline="\r\n") as outfile:
         outfile.write(text)
     #print(corpus_guten.sents("strip/{}.txt".format(filenumber)))

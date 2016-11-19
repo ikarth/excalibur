@@ -1,0 +1,74 @@
+Alice attacks Bob:
+Bob parries Alice's attack
+Bob dodges Alice's attack
+
+
+
+attack->attack success|attack failure
+parry
+attack-counterattack
+
+
+
+
+# Begin...
+{prereqs: ["begin combat"] effect: {remove: ["begin combat"]} action: "In a moment {ACTOR} stepped quickly upon the bridge where {ANTAGONIST} stood."}
+{prereqs: ["begin combat"] effect: {remove: begin combat"] action: "At last {ACTOR} struck like a flash, and--"rap!"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow; and so this mighty battle began."}
+{prereqs: ["begin combat"] effect: ["remove" "begin combat"] action: "Then {ACTOR} spat upon {ACTOR'S} hands and, grasping {ACTOR'S} {ACTOR_WEAPON}, came straight at the other."}
+{prereqs: ["begin combat"] effect: ["remove" "begin combat"] action: "{ACTOR} gripped {ACTOR'S} {ACTOR_WEAPON} and threw {ACTOR_SELF} upon {ACTOR'S} guard."}
+{prereqs: ["begin combat"] effect: ["remove" "begin combat"] action: "{ACTOR} said nothing at first but stood looking at {ANTAGONIST} with a grim face."}
+{prereqs: ["begin combat"] effect: ["remove" "begin combat"] action: "Whatever {ACTOR} thought, {ACTOR} stood {ACTOR'S} ground, and now {ACTOR} and {ANTAGONIST} stood face to face."}
+
+# Attacked and successfully counterattacked
+"{ANTAGONIST} struck two or three blows, but soon found that {ANTAGONIST} had met {ANTAGONIST'S} match, for {ACTOR} warded and parried all of them, and, before {ANTAGONIST} thought, {ACTOR} gave {ANTAGONIST} a rap upon the ribs in return."
+
+"{ANTAGONIST} struck at {ACTOR}, but soon found that {ANTAGONIST} had met {ANTAGONIST'S} match, for {ACTOR} warded and parried all of them, and, before {ANTAGONIST} thought, {ACTOR} gave {ANTAGONIST} a rap upon the ribs in return."
+"So shrewd was the stroke that {ACTOR} came within a hair's-breadth of falling, but {ACTOR} regained {ACTOR_SELF} right quickly and, by a dexterous blow, gave {ANTAGONIST} a crack on the crown that caused the blood to flow."
+
+"But {ACTOR} warded the blow and thwacked {ANTAGONIST}, and this time so fairly that {ANTAGONIST} fell heels over head, as the queen pin falls in a game of bowls."
+"At last {ACTOR} struck {ANTAGONIST'S} {ANTAGONIST_WEAPON} so fairly in the middle that {ANTAGONIST} could hardly hold {ANTAGONIST'S} {ANTAGONIST_WEAPON} in {ANTAGONIST'S} hand; again {ACTOR} struck, and {ANTAGONIST} bent beneath the blow; a third time {ACTOR} struck, and now not only fairly beat down {ANTAGONIST'S} guard, but gave {ANTAGONIST} such a rap, also, that down {ANTAGONIST} tumbled."
+
+# Attack
+"First {ACTOR} made a feint, and then delivered a blow at {ANTAGONIST} that, had it met its mark, would have tumbled {ANTAGONIST} speedily."]
+"At last {ACTOR} saw {ACTOR'S} chance, and, throwing all the strength {ACTOR} felt going from {ACTOR_HIM} into one blow that might have felled an ox, {ACTOR} struck at {ANTAGONIST} with might and main."
+
+# Parried
+"{ACTOR} struck like a flash, and--\"rap!\"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow."
+"But {ACTOR} turned the blow right deftly and in return gave one as stout, which {ANTAGONIST} also turned as {ACTOR} had done."
+"Thrice {ACTOR} struck {ANTAGONIST}; once upon the arm and twice upon the ribs, and yet {ACTOR} warded all the other's blows, only one of which, had it met its mark, would have laid {ACTOR} lower in the dust than {ACTOR} had ever gone before."
+
+# Broken weapon when defending
+"{ANTAGONIST} warded two of the strokes, but at the third, {ANTAGONIST'S} {ANTAGONIST_WEAPON} broke beneath the mighty blows of {ACTOR}."
+
+# React to broken weapon
+"\"Now, ill betide thee, traitor {ACTOR_WEAPON},\" cried {ACTOR}, as it fell from {ACTOR'S} hands; \"a foul {ACTOR_WEAPON} art thou to serve me thus in my hour of need.\""
+
+# Hits home
+"At last {ACTOR} gave {ANTAGONIST} a blow upon the ribs that made {ANTAGONIST'S} jacket smoke like a damp straw thatch in the sun."
+"And now did {ANTAGONIST'S} {ANTAGONIST_ARMOR} stand {ANTAGONIST} in good stead, and but for it {ANTAGONIST} might never have held {ANTAGONIST_WEAPON} in hand again."
+"As it was, the blow {ANTAGONIST} caught beside the head was so shrewd that it sent {ANTAGONIST} staggering, so that, if {ACTOR} had had the strength to follow up {ACTOR'S} vantage, it would have been ill for {ANTAGONIST}."
+"Then, raising {ACTOR'S} {ACTOR_WEAPON}, {ACTOR} dealt {ANTAGONIST} a blow upon the ribs."
+
+# Recover response, plus counterattack
+"But {ACTOR} regained {ACTOR_SELF} quickly and, at arm's length, struck back a blow at {ANTAGONIST}, and this time the stroke reached its mark, and down went {ANTAGONIST} at full length, {ANTAGONIST'S} {ANTAGONIST_WEAPON} flying from {ANTAGONIST'S} hand as {ANTAGONIST} fell."
+
+# Emotion...
+"Then {ACTOR} grew mad with anger and smote with all {ACTOR'S} might at the other."
+"At this {ANTAGONIST} laughed aloud, and {ACTOR} grew more angry than ever, and smote again with all {ACTOR'S} might and main."
+
+# General back and forth
+"Well did {ACTOR} hold {ACTOR'S} own that day."
+"This way and that they fought, and back and forth, {ACTOR'S} {ACTOR_ATTRIBUTE} against the {ANTAGONIST'S} {ANTAGONIST_ATTRIBUTE}."
+"Then up and down and back and forth they trod, the blows falling so thick and fast that, at a distance, one would have thought that half a score were fighting."
+"Thus they fought for nigh a half an hour, until the ground was all plowed up with the digging of their heels, and their breathing grew labored like the ox in the furrow."
+"The dust of the highway rose up around them like a cloud, so that at times the onlookers could see nothing, but only hear the {ACTOR_WEAPON_SOUND} of {ACTOR_WEAPON} against {ANTAGONIST_WEAPON}."
+"So they stood, each in their place, neither moving a finger's-breadth back, for one good hour, and many blows were given and received by each in that time, till here and there were sore bones and bumps, yet neither thought of crying \"Enough,\" nor seemed likely to fall."
+"Now and then they stopped to rest, and each thought that they never had seen in all their life before such a hand at {ACTOR_WEAPON} or {ANTAGONIST_WEAPON}."
+
+
+But {ACTOR} suffered the most, for {ACTOR} had become unused to such stiff labor, and {ACTOR'S} joints were not as supple as they had been before {DECADENT_THING}.
+
+
+
+
+
