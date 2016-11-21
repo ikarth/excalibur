@@ -276,6 +276,12 @@ def is_wounded_actor(state):
     
 def is_wounded_target(state):
     return is_tag_count_positive("wounded {TARGET}", state)
+
+def not_is_wounded_actor(state):
+    return not is_tag_count_positive("wounded {ACTOR}", state)
+    
+def not_is_wounded_target(state):
+    return not is_tag_count_positive("wounded {TARGET}", state)
         
 def is_fallen_actor(state):
     return is_tag_count_positive("fallen {ACTOR}", state)
@@ -302,7 +308,7 @@ def target_vulnerable(state):
     if is_wounded_target(state):
         return True
     return False
-    
+   
 def target_broken_weapon(state):
     cur_tags = state["conflict"].currentState()
     return (expandTagFromState("broken weapon {TARGET}", state) in cur_tags)
@@ -506,7 +512,18 @@ actcat = [
 {Cmd.prereq: [can_attack], Cmd.action: "The dust of the highway rose up around them like a cloud, so that at times the onlookers could see nothing, but only hear the {ACTOR_WEAPON_SOUND} of {ACTOR_WEAPON} against {ANTAGONIST_WEAPON}."},
 {Cmd.prereq: [can_attack], Cmd.action: "So they stood, each in their place, neither moving a finger's-breadth back, for one good hour, and many blows were given and received by each in that time, till here and there were sore bones and bumps, yet neither thought of crying \"Enough,\" nor seemed likely to fall."},
 {Cmd.prereq: [can_attack], Cmd.action: "Now and then they stopped to rest, and each thought that they never had seen in all their life before such a hand at {ACTOR_WEAPON} or {ANTAGONIST_WEAPON}."},
-{Cmd.prereq: [is_fallen_actor, not_end_combat], Cmd.effects: [efx_end_combat], Cmd.action: "And so {ACTOR} was defeated by {ANTAGONIST'S} {ANTAGONIST_WEAPON}"}
+{Cmd.prereq: [is_fallen_actor, not_end_combat], Cmd.effects: [efx_end_combat], Cmd.action: "And so {ACTOR} was defeated by {ANTAGONIST'S} {ANTAGONIST_WEAPON}"},
+# Friar Tuck
+{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "So, without more ado, they came together, and thereupon began a fierce and mighty battle."},
+{Cmd.prereq: [can_attack], Cmd.action: "Right and left, and up and down and back and forth they fought."},
+{Cmd.prereq: [can_attack], Cmd.action: "The {ACTOR_WEAPON} {ACTOR_WEAPON_VERB} and then met with a {ACTOR_WEAPON_SOUND} that sounded far and near."},
+{Cmd.prereq: [can_attack], Cmd.action: "This was no playful bout, but a grim and serious fight of real earnest."},
+{Cmd.prereq: [can_attack], Cmd.action: "Thus they strove for an hour or more, pausing every now and then to rest, at which times each looked at the other with wonder, and thought that never had they seen so stout a foe; then once again they would go at it more fiercely than ever."},
+{Cmd.prereq: [can_attack, not_is_wounded_actor, not_is_wounded_target], Cmd.action: "Yet in all this time neither had harmed the other nor caused his blood to flow."},
+# Beggar Riccon
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "Then {ACTOR} swung his {WEAPON} also, and struck a mighty blow at {TARGET}, which {TARGET} turned."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action:  "Three blows {TARGET} struck, yet never one touched so much as a hair of {ACTOR'S} head. "},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_knockdown_target, efx_drop_weapon_target], Cmd.action: "Then {ACTOR} saw {ACTOR'S} chance, and, ere you could count three, {TARGET'S} {TARGET_WEAPON} was flying away, and {TARGET} {TARGET_SELF} lay upon the {GROUND_DESCRIPTION} with no more motion than you could find in an empty pudding bag."}
 ]
 
 test_char_one = Character("Robin Hood")
