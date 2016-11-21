@@ -26,6 +26,7 @@ from gutenberg.acquire import get_metadata_cache
 
 if not 'cache' in globals():
     cache = gutenberg.acquire.metadata.SleepycatMetadataCache('./data/gutenberg/metadata/cache.sqlite')
+    #cache.populate()
     gutenberg.acquire.set_metadata_cache(cache)
 
 if not 'corpus_guten' in globals():
