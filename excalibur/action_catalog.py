@@ -3,12 +3,13 @@
 import sourcing
 import textacy
 import numpy
+import pickle
 
 import collections
 
 print("Cataloging actions...")
 
-action_texts = [60, 1184, 2741, 53125, 2681, 259, 2759, 1257  ]
+action_texts = [60, 1184, 2741, 53125, 2681, 259, 2759, 1257]
 virgil_and_homer = [2199, 22382, 16452, 6150, 3059, 6130, 1727, 3160, 51355, 48895, 7959, 7524, 16927, 228, 18466, 22456, 29358 ]
 arthurian = [12753, 831, 1251, 1252, 1949, 1972, 8601, 610, 12753, 10745, 22053, 25654, 45514, 7098, 13674, 22396, 36462, 15551, 82, 6582, 4926, 3011, 14244, 14305, 2414, 46923, 26646, 36540, 41108, 46176, 39591]
 howard_pyle = [10148, 964, 1557, 10745, 2865, 26862, 33702, 47723, 47564]
@@ -16,6 +17,9 @@ cabell = [22463]
 medieval_town_series = [38559,46552,44314,43764,46662,41391,37793,46618,46510,46401,46274,24519,46732,46533,24519,38009,46301,41209,46384]
 
 pirates = [25982,21072,21073,21072,21813,21692,21062,24783,17563,10727,24914,10765,19589,11399,17863,21071,6422,12216,19564,21027,25088,19139,17168,13073,7346,7870,19273,10966,17415,24907,21104,21087,21086,24882,24439,26960,22903,21403,18469,22169,17741,24035,21580,19396,26612,16921,25472,10210,26514,973,10394,22033,22215,22752,1965,3294,421,20025,17188,17053,20774,33318,26958,28418]
+
+selected_texts = action_texts + pirates + howard_pyle + cabell + virgil_and_homer + arthurian
+selected_texts = set(selected_texts)
 
 #pirate_corpus = sourcing.getTextCorpus(pirates)
 #pirate_actions = sourcing.getActionCorpus(pirate_corpus)
@@ -33,13 +37,30 @@ pirates = [25982,21072,21073,21072,21813,21692,21062,24783,17563,10727,24914,107
 current_actions = []
 current_corpus = []
 
+def loadSingleCorpus(corp_texts):
+    global current_actions
+    global current_corpus
+    selected_corpus = sourcing.getTextCorpus(corp_texts)
+    selected_actions = sourcing.getActionCorpus(selected_corpus)
+    current_actions = selected_actions
+    current_corpus = selected_corpus
+
+def loadSelection():
+    global current_actions
+    global current_corpus
+    selected_corpus = sourcing.getTextCorpus(selected_texts)
+    selected_actions = sourcing.getActionCorpus(selected_corpus)
+    current_actions = selected_actions
+    current_corpus = selected_corpus
+
 def loadPyle():
     global current_actions
-    global current_coprus
+    global current_corpus
     pyle_corpus = sourcing.getTextCorpus(howard_pyle)
     pyle_actions = sourcing.getActionCorpus(pyle_corpus)
     current_actions = pyle_actions
     current_corpus = pyle_corpus
+    
 
 def getSentences(word, action_corpus=current_actions):
     return sourcing.findNearbyVerbs(word, action_corpus)
@@ -88,8 +109,26 @@ def writeSentences(actions, filename = "sent_list.txt"):
     sents = [a.sentence.text for a in actions]
     textacy.fileio.write_file_lines(sents, filename, encoding="utf8")
 
+def saveCorpus():
+    global current_corpus
+    global current_actions
+    current_corpus.save("./", name="current_corpus.textacy")
+    with open("actions.pickle", "wb") as f:
+        pickle.dump(current_actions, f)
+   
     
+def loadCorpus():
+    global current_corpus
+    global current_actions
+    #with open("corpus.pickle", "rb") as f:
+    #    current_corpus = pickle.load(f)
+    current_corpus = textacy.Doc.load("./", name="current_corpus.textacy")
+    with open("actions.pickle", "rb") as f:
+        current_actions = pickle.load(f)
+   
 #def replaceNouns(sent):
 #    for tok in sent:
         # find nsubj and replace it (or its phrase) with #SUBJECT#
         # look for NNPS, categorize it as appropreate...
+        
+#loadPyle()
