@@ -5,6 +5,7 @@ import functools
 from enum import Enum
 import numpy.random
 import sys
+from character import Character
 
 class Cmd(Enum):
     current_actor = 1 # character currently acting, set dynamically
@@ -86,46 +87,7 @@ def expandTagFromState(tag, state):
 
 def expandTagFromAction(tag, state):
     return expandTag(tag, state["action"][Cmd.current_actor], state["action"][Cmd.current_target])    
-    
-class Character:
-    def __init__(self, name):
-        self._id = name
-        self.gender = "male"
-    
-    @property
-    def id(self):
-        return str.upper(self._id).replace(" ", "_")
-        
-    @property
-    def name(self):
-        return self._id
-        
-    @property
-    def possessive(self):
-        return str(self._id) + "'s"
-        
-    @property
-    def weapon_name(self):
-        return "sword"
-        
-    @property
-    def him(self):
-        if self.gender is "female":
-            return "her"
-        return "him"
-    
-    @property
-    def his(self):
-        if self.gender is "female":
-            return "hers"
-        return "his"
-        
-    @property
-    def herself(self):
-        if self.gender is "female":
-            return "herself"
-        return "himself"
-                
+               
 class Conflict:
     def __init__(self, action_catalog):
         self.char_one = Character("Robin Hood")
