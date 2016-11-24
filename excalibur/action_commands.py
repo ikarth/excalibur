@@ -6,6 +6,8 @@ from enum import Enum
 import numpy.random
 import sys
 from character import Character
+from character import generatePirate
+import tracery
 
 class Cmd(Enum):
     current_actor = 1 # character currently acting, set dynamically
@@ -43,6 +45,7 @@ def translateActionDescription(action):
     action_string = action_string.replace("{ANTAGONIST_ATTRIBUTE}", "strength")
     action_string = action_string.replace("{ACTOR_WEAPON_SOUND}", "clank")
     action_string = action_string.replace("{ANTAGONIST_ARMOR}", "leather cap")
+    # TODO: add lookups for ships and crew
     return action_string
 
 class ActionProcessor:
@@ -89,9 +92,9 @@ def expandTagFromAction(tag, state):
     return expandTag(tag, state["action"][Cmd.current_actor], state["action"][Cmd.current_target])    
                
 class Conflict:
-    def __init__(self, action_catalog):
-        self.char_one = Character("Robin Hood")
-        self.char_two = Character("Sir Galahad")
+    def __init__(self, action_catalog, protagonist, antagonist):
+        self.char_one = protagonist#Character("Robin Hood")
+        self.char_two = antagonist#Character("Sir Galahad")
         self.action_processor = ActionProcessor()
         self.deck_of_actions = action_catalog
         #self.current_state = []
@@ -174,6 +177,12 @@ def Fight(conflict):
     print(conflict.currentState())
     print("===")
     return
+
+def WeighAnchor(conflict):
+    conflict.performNextAction(0)
+    print(conflict.currentState())
+    print("===")
+    
         
 def in_combat(state):
     cur_tags = state["conflict"].currentState()
@@ -372,13 +381,13 @@ def efx_break_weapon_target(state):
     effects.update([expandTagFromAction("broken weapon {TARGET}", state)])
     effects.update(["signal broken weapon"])
     effects.subtract([expandTagFromAction("has weapon {TARGET}", state)])
-    efx_signal_broken_weapon(state)
+    effects = efx_signal_broken_weapon(state)
     return effects
     
 def efx_drop_weapon_target(state):
     effects = state["tags"]
     effects.subtract([expandTagFromAction("has weapon {TARGET}", state)])
-    efx_signal_dropped_weapon(state)
+    effects = efx_signal_dropped_weapon(state)
     return effects
     
 def efx_break_weapon_actor(state):
@@ -386,7 +395,7 @@ def efx_break_weapon_actor(state):
     effects.update([expandTagFromAction("broken weapon {ACTOR}", state)])
     effects.update(["signal broken weapon"])
     effects.subtract([expandTagFromAction("has weapon {ACTOR}", state)])
-    efx_signal_broken_weapon(state)
+    effects = efx_signal_broken_weapon(state)
     return effects
     
 def efx_recover_balance_actor(state):
@@ -430,7 +439,7 @@ def efx_clear_signal_broken_weapon(state):
     
 
 
-actcat = [
+swordfight_actcat = [
 {Cmd.prereq: [not_in_combat, not_end_combat], Cmd.effects: [efx_signal_start_combat], Cmd.action: "BEGIN"},
 #Begin
 {Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "In a moment {ACTOR} stepped quickly {UPON THE PLACE} where {ANTAGONIST} stood."},
@@ -487,6 +496,163 @@ actcat = [
 {Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action:  "Three blows {TARGET} struck, yet never one touched so much as a hair of {ACTOR'S} head. "},
 {Cmd.prereq: [can_parry], Cmd.effects: [efx_knockdown_target, efx_drop_weapon_target], Cmd.action: "Then {ACTOR} saw {ACTOR'S} chance, and, ere you could count three, {TARGET'S} {TARGET_WEAPON} was flying away, and {TARGET} {TARGET_SELF} lay upon the {GROUND_DESCRIPTION} with no more motion than you could find in an empty pudding bag."}
 ]
+
+def respond_start_weigh_anchor(state):
+    cur_tags = state["conflict"].currentState()
+    search_tag = expandTagFromState("signal start weigh anchor {ACTOR SHIP}", state)
+    for tag in cur_tags:
+        if search_tag in tag:
+            return True
+    return False
+
+def respond_prepare_capstan(state):
+    cur_tags = state["conflict"].currentState()
+    search_tag = expandTagFromState("signal prepare capstan {ACTOR SHIP}", state)
+    for tag in cur_tags:
+        if search_tag in tag:
+            return True
+    return False
+
+def if_anchor_aweigh(state):
+    return is_tag_count_positive("anchor aweigh {ACTOR SHIP}", state)
+    
+def not_anchor_aweigh(state):
+    return not is_tag_count_positive("anchor aweigh {ACTOR SHIP}", state)
+    
+def if_turning_capstan(state):
+    return is_tag_count_positive("turning capstan {ACTOR SHIP}", state)
+
+def if_weighing_anchor(state):
+    return is_tag_count_positive("weighing anchor {ACTOR SHIP}", state)
+
+def if_weighing_anchor_end(state):
+    return is_tag_count_positive("weighing anchor end{ACTOR SHIP}", state)
+
+#def begin_weighing_anchor(state):
+#    return is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
+
+def if_anchor_struggle(state):
+    return is_tag_count_positive("anchor struggle {ACTOR SHIP}", state)
+
+def not_turning_capstan(state):
+    return not is_tag_count_positive("turning capstan {ACTOR SHIP}", state)
+
+def not_weighing_anchor(state):
+    return not is_tag_count_positive("weighing anchor {ACTOR SHIP}", state)
+
+def not_weighing_anchor_end(state):
+    return not is_tag_count_positive("weighing anchor end {ACTOR SHIP}", state)
+    
+def not_anchor_struggle(state):
+    return not is_tag_count_positive("anchor struggle {ACTOR SHIP}", state)
+    
+def is_tag_count_greater_than(tag, than, state):
+    cur_tags = state["conflict"].currentState()
+    if (expandTagFromState(tag, state) in cur_tags):
+        return cur_tags[expandTagFromState(tag, state)] > than
+
+def is_tag_count_less_than(tag, than, state):
+    cur_tags = state["conflict"].currentState()
+    if (expandTagFromState(tag, state) in cur_tags):
+        return cur_tags[expandTagFromState(tag, state)] < than
+                        
+def if_anchor_at_long_stay(state):
+    return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 10, state)
+
+def if_anchor_at_short_stay(state):
+    return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 7, state)
+
+def if_anchor_at_up_and_down(state):
+    return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 4, state)
+
+def if_anchor_at_anchor_aweigh(state):
+    return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 2, state)
+
+def efx_signal_start_weigh_anchor(state):
+    effects = state["tags"]
+    effects.update([expandTagFromAction("signal start weigh anchor {ACTOR SHIP}", state)])
+    effects.update([expandTagFromAction("weighing anchor {ACTOR SHIP}", state)])
+    #effects = efx_clear_signal(state, expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state))
+    return effects
+    
+def efx_signal_prepare_capstan(state):
+    effects = state["tags"]
+    effects.update([expandTagFromAction("signal prepare capstan {ACTOR SHIP}", state)])
+    effects = efx_clear_signal(state, expandTagFromAction("signal start weigh anchor {ACTOR SHIP}", state))
+    #effects = efx_clear_signal(state, expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state))
+    return effects
+    
+def efx_begin_turning_capstan(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 12
+    effects = efx_clear_signal(state, expandTagFromAction("signal prepare capstan {ACTOR SHIP}", state))
+    return effects
+    
+def efx_turn_capstan(state):
+    effects = state["tags"]
+    effects.subtract([expandTagFromAction("turning capstan {ACTOR SHIP}", state)])
+    return effects
+    
+def efx_finish_turn_capstan(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 0
+    return effects
+    
+def efx_end_weigh_anchor(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("weighing anchor {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("anchor aweigh {ACTOR SHIP}", state)] = 1
+    effects[expandTagFromAction("end weigh anchor {ACTOR SHIP}", state)] = 1
+    effects = efx_clear_signal(state, expandTagFromAction("weighing anchor {ACTOR SHIP}", state))
+    return effects
+    
+# Crew vs Anchor
+weigh_anchor_actcat = [
+#Temp: an order to jumpstart the conflict
+{Cmd.prereq: [not_weighing_anchor, not_weighing_anchor_end, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
+{Cmd.prereq: [not_weighing_anchor, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
+# clear the deck, make ready
+{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
+{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "The order was given, and soon the messenger was run out and the capstan manned."},
+# capstan bars fitted to capstan
+{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} fitted the bars, and the #sailors# took their positions around the capstan."},
+{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
+{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "\"Take your positions, you #sailors#,\" said {THE BOATSWAIN}."},
+{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "There came soon the familiar racket of making sail and trimming yards and the clank of the capstan pawls. "},
+{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
+#pulling at the capstan
+{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained."},
+{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "\"That's your sort, my hearties,\" exclaimed {THE BOATSWAIN} encouragingly, as {THE BOATSWAIN} applied {THE BOATSWAIN'S} tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!"},
+{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# strained at the bars, the pawl clicking as they drove the capstan round."},
+{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The chorus of the shanty kept time with the clicks of the pawl."},
+#sing a shanty
+{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: ["As the #sailors# turned the capstan, {THE BOATSWAIN} took up the verse and the crew repeated the chorus: {SHANTY}", "The crew sang in time with their work: {SHANTY}", "As was their practice, they sang to maintain the rhythm. {SHANTY}"]},
+# straining, it goes slowly...
+{Cmd.prereq: [if_turning_capstan, if_anchor_struggle], Cmd.effects: [], Cmd.action: ["The anchor held fast, drawing line tighter and pulling the ship closer.", "The #sailors# strained against the wheel of the capstan, each rachet of the pawl a hard won fight."]},
+# call out: at long stay / at short stay, up and down, anchors aweigh
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "#weigh_anchor_long_stay#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "#weigh_anchor_short_stay#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "#weigh_anchor_up_and_down#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "#weigh_anchor_aweigh#"},
+# catting the anchor
+{Cmd.prereq: [if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_end_weigh_anchor], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
+]
+
+postprocessing_table = {
+"the_call_went_out": ["the call went out", "sang out {THE BOATSWAIN}", "cried {THE BOATSWAIN}", "was the call", "came the cry", "said {THE BOATSWAIN}, though it hardly took a keen eye to see it: the #sailors# could feel the strain"],
+"the_crew_pushed": ["and the crew pushed around with a will", "accompanied by the clank of the pawl", "the great cable hauled by the messenger as it was driven by the capstan", "by the sweat and strain of the crew as they pushed","and the crew heaved again","with another heave on the capstan", "followed by the crew grunting as they gave the capstan another mighty shove"],
+"sailors":["sailors","tars"],
+"catting_1":["It took only a little more effort to bring the anchor up from the water, and the #sailors# completed the job with gusto.","Then the anchor flukes scraped and banged against the bow timbers.","With one last strain on the capstan, the anchor was brought to the cathead.", ""],
+"catting_2":["#sailors.capitalize# rushed to cat the anchor.","The anchor was soon secured to the cathead.","Once the anchor was catted, the #sailors# stowed the capstan bars again.",""],
+"catting_3":["The #ship_type# was alive and in motion.","The voyage was now properly begun.","The ship felt freer and lighter, as if it was glad to get underway.","","",""],
+"catting_4":["The vessel heeled a little and the lapping water changed its tune to a swash-swash as the hull pushed it aside.","",""],
+"weigh_anchor_long_stay":["\"At long stay,\" #the_call_went_out#, #the_crew_pushed#.", "#the_call_went_out.capitalize#: \"At long stay,\" #the_crew_pushed#", "As the capstan turned, the cable could be seen cutting through the surf.", "\"At long stay!\" #the_crew_pushed.capitalize#.", "\"At long stay!\""],
+"weigh_anchor_short_stay": ["#the_crew_pushed.capitalize#, the anchor cable drawing taut.","\"At short stay,\" #the_call_went_out#, #the_crew_pushed#.", "The anchor cable was hauled aboard, #the_crew_pushed#.", "The cable drew taut, prompting the call: \"At short stay.\"","With each heave on the capstan, the ship was pulled closer to the anchor."],
+"weigh_anchor_up_and_down": ["Below the waves, the anchor began to shift, the top lifting off the seafloor, #the_crew_pushed#.","\"Up and down,\" #the_call_went_out#, as the anchor pulled vertical, still in contact with the seafloor.","The anchor's tilt prompted {THE BOATSWAIN} to sing out, \"Up and down!\"","\"Up and down,\" #the_call_went_out, and the crew knew the end of their task was near."],
+"weigh_anchor_anchors_aweigh": ["And at last {THE BOATSWAIN} called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
+}
+
 
 test_char_one = Character("Robin Hood")
 test_char_two = Character("Little John")

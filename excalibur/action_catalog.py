@@ -7,6 +7,8 @@ import pickle
 
 import collections
 
+import numpy.random
+
 print("Cataloging actions...")
 
 action_texts = [60, 1184, 2741, 53125, 2681, 259, 2759, 1257]
@@ -5263,15 +5265,19 @@ public_domain_texts = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18
 53550, 53551, 53552, 53553, 53554, 53555, 53556, 53557, 53558, 53559, 53560,
 53561, 53562, 53563, 53564, 53565, 53566]
 
+def loadSelectedTextsPublicDomain(text_count):
+    global selected_texts_public
+    numpy.random.seed(53566)
+    complete_fiction_list = sourcing.build_fiction_catalog()
+    subset_complete_fiction_list = numpy.random.choice(complete_fiction_list, text_count, replace=False)
+    selected_texts = action_texts + pirates + howard_pyle + cabell + virgil_and_homer + arthurian + list(subset_complete_fiction_list)
+    selected_texts = set(selected_texts)
+    
+    selected_texts = selected_texts.intersection(sourcing.build_list_of_en())
 
-complete_fiction_list = sourcing.build_fiction_catalog()
-selected_texts = action_texts + pirates + howard_pyle + cabell + virgil_and_homer + arthurian + consolidated_fiction_list + complete_fiction_list
-selected_texts = set(selected_texts)
-
-selected_texts = selected_texts.intersection(sourcing.build_list_of_en())
-
-selected_texts_public = selected_texts.intersection(public_domain_texts)
-selected_texts_non_public = selected_texts.difference(public_domain_texts)
+    selected_texts_public = selected_texts.intersection(public_domain_texts)
+    selected_texts_non_public = selected_texts.difference(public_domain_texts)
+    return selected_texts_public
 
 
 
@@ -5291,12 +5297,22 @@ selected_texts_non_public = selected_texts.difference(public_domain_texts)
 current_actions = []
 current_corpus = []
 
+def actionsFromCurrentCorpus():
+    global current_actions
+    global current_corpus
+    current_actions = sourcing.getActionCorpus(current_corpus)
+
 def loadSingleCorpus(corp_texts):
     global current_actions
     global current_corpus
     selected_corpus = sourcing.getTextCorpus(corp_texts)
     selected_actions = sourcing.getActionCorpus(selected_corpus)
     current_actions = selected_actions
+    current_corpus = selected_corpus
+    
+def loadCorpusFromText(corp_texts):
+    global current_corpus
+    selected_corpus = sourcing.getTextCorpus(corp_texts)
     current_corpus = selected_corpus
 
 def loadSelection():
@@ -5363,21 +5379,21 @@ def writeSentences(actions, filename = "sent_list.txt"):
     sents = [a.sentence.text for a in actions]
     textacy.fileio.write_file_lines(sents, filename, encoding="utf8")
 
-def saveCorpus():
+def saveCorpus(filename):
     global current_corpus
     global current_actions
-    current_corpus.save("./data")
-    with open("actions.pickle", "wb") as f:
+    current_corpus.save("./data", "{0}_fiction".format(filename))
+    with open("{0}_actions.pickle".format(filename), "wb") as f:
         pickle.dump(current_actions, f)
    
     
-def loadCorpus():
+def loadCorpus(filename):
     global current_corpus
     global current_actions
     #with open("corpus.pickle", "rb") as f:
     #    current_corpus = pickle.load(f)
-    current_corpus = textacy.Corpus.load("./data")
-    with open("actions.pickle", "rb") as f:
+    current_corpus = textacy.Corpus.load("./data", "{0}_fiction".format(filename))
+    with open("{0}_actions.pickle".format(filename), "rb") as f:
         current_actions = pickle.load(f)
    
 #def replaceNouns(sent):
@@ -5386,3 +5402,8 @@ def loadCorpus():
         # look for NNPS, categorize it as appropreate...
         
 #loadPyle()
+
+def activateCorpus():
+    loadCorpusFromText(loadSelectedTextsPublicDomain(6000))
+    actionsFromCurrentCorpus()
+    saveCorpus("sixk")

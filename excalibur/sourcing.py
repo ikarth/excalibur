@@ -11,6 +11,7 @@ import textacy
 import pycorpora
 import numpy
 import badwords
+import os
 
 from enum import Enum
 
@@ -23,6 +24,7 @@ from gutenberg.acquire import get_metadata_cache
 # I always favor implementing the specific uses first and wait to do the 
 # architecture until you know what it actually needs to look like.
 
+recache_stripped_files = False
 
 if not 'cache' in globals():
     #cache = gutenberg.acquire.metadata.SqliteMetadataCache('./data/gutenberg/metadata/cache_sqlite')
@@ -80,18 +82,27 @@ def filterAndCleanText(text):
 
 def stripGutenberg(filenumber):
     # TODO: add a check to see if the stripped file already exists
-    textfile = gutenberg.acquire.load_etext(filenumber)
-    text = gutenberg.cleanup.strip_headers(textfile).strip()
-    text = unwrapText(text)
-    text = filterAndCleanText(text)
-    #text = removeDialogue(text)
-    with open("./data/corpora/gutenberg/strip/{}.txt".format(filenumber), mode="w", encoding="utf_8", newline="\r\n") as outfile:
-        outfile.write(text)
-    #print(corpus_guten.sents("strip/{}.txt".format(filenumber)))
-    return str("strip/{}.txt".format(filenumber))
+    print(filenumber, end=",")
+    filename = "./data/corpora/gutenberg/strip/{}.txt".format(filenumber)
+    if os.path.isfile(filename):
+        if not recache_stripped_files:
+            return str("strip/{}.txt".format(filenumber))
+    try:
+        textfile = gutenberg.acquire.load_etext(filenumber)
+        text = gutenberg.cleanup.strip_headers(textfile).strip()
+        text = unwrapText(text)
+        text = filterAndCleanText(text)
+        #text = removeDialogue(text)
+        with open(filename, mode="w", encoding="utf_8", newline="\r\n") as outfile:
+            outfile.write(text)
+            #print(corpus_guten.sents("strip/{}.txt".format(filenumber)))
+        return str("strip/{}.txt".format(filenumber))
+    except gutenberg._domain_model.exceptions.UnknownDownloadUriException:
+        return None
 
 def getGutenberg(filenumber):
-    stripGutenberg(filenumber) # make sure the data is on disk
+    if stripGutenberg(filenumber) is None: # make sure the data is on disk
+        return None
     return open("./data/corpora/gutenberg/strip/{}.txt".format(filenumber), mode="r", encoding="utf_8").read()
 
 def getGutenbergFilename(filenumber):
@@ -362,15 +373,19 @@ def buildSourceActionsFromDoc(docu):
 def getTextCorpus(acttext):
     actdocs = []
     actmeta = []
+    counter = 0
     for i in acttext:
-        if i % 100 is 0:
-            print("{0} of {1}".format(i, len(acttext)))
+        counter += 1
+        if counter % 100 is 0:
+            print(" {0} of {1} ".format(counter, len(acttext)))
         print(".", end="")
         am = getGutenbergMetadata(i)
-        ad = textacy.Doc(getGutenberg(i), None, "en")
-        actdocs.append(ad)        
-        actmeta.append(am)
-        print("m", end="")
+        text_src = getGutenberg(i)
+        if not (text_src is None):
+            ad = textacy.Doc(text_src, None, "en")
+            actdocs.append(ad)        
+            actmeta.append(am)
+            print("m", end="")
     return textacy.corpus.Corpus('en', docs=actdocs, metadatas=actmeta)
     
     

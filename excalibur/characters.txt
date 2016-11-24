@@ -36,6 +36,22 @@ chase scene
 sea battle
 ship-to-ship brawl
 
+Conflicts can be:
+Character vs. Character
+Ship vs. Ship
+Crew vs. Crew
+Ship vs. Sea
+Ship vs. Storm
+Crew/Ship vs. Shipwreck
+Crew/Ship vs. Weighing Anchor
+Crew/Ship vs. Getting ready to set sail
+Crew/Ship vs. Provisioning the ship
+
+A crew is a collection of characters working together
+A ship has a crew
+
+
+
 
 The secret island fortress has its own plots:
 - finding it in the first place (shipwrecked there, gifted it by former inhabitant, treasure map)
@@ -57,4 +73,642 @@ The port called home:
 
 The antagonist's fortress
 The antagonist's ship
+
+Mutiny
+
+Finding buried treasure
+- rumors of the treasure
+- acquire a map/clue
+- searching for the destination
+
+Travel (getting from point a to point b is a common subplot)
+-Can we get there by walking (is it on the same island?)
+-Do we have a ship to sail there in? (if not: get ship or get passage)
+-If we have a ship, get it ready to set sail
+-Set sail
+
+
+
+MUSIC/SHANTIES
+shanties = [{"chorus":"""
+   #verse#
+   #verse#
+   #verse#
+   Early in the morning?
+   Hooray and up she rises,
+   Hooray and up she rises,
+   Hooray and up she rises
+   Early in the morning.
+
+""",
+"verse": [
+"What shall we do with the drunken sailor,",
+"Put him in the long-boat until he's sober.",
+"Pull out the plug and wet him all over.",
+"Put him in the scuppers with a hose-pipe on him.",
+"Heave him by the leg in a running bowlin'.",
+"Tie him to the taffrail when she's yard-arm under."
+]},{"chorus":"""
+   #verse#
+   Storm along boys,
+   Storm along.
+   #verse#
+   Ah-ha, come along, get along,
+   Stormy along John.
+""",
+"verse":[
+"Oh poor old Stormy's dead and gone.",
+"I dug his grave with a silver spade.",
+"I lower'd him down with a golden chain.",
+"I carried him away to Mobile Bay.",
+"Oh poor old Stormy's dead and gone."]
+}},{"chorus":"""
+   #verse_1#
+   Oh Rio.
+   #verse_2#
+   And we're bound for the Rio Grande.
+   Then away love, away,
+   'Way down Rio,
+   So fare ye well my pretty young gel.
+   For we're bound for the Rio Grande.
+""","verse_1":[
+"I'll sing you a song of the fish of the sea.",
+"Sing good-bye to Sally, and good-bye to Sue,",
+"Our ship went sailing out over the Bar",
+"Farewell and adieu to you ladies of Spain",
+"I said farewell to Kitty my dear,",
+"The oak, and the ash, and the bonny birk tree"],
+"verse_2":[
+"I'll sing you a song of the fish of the sea.",
+"Sing good-bye to Sally, and good-bye to Sue,",
+"And we pointed her nose for the South-er-en Star.",
+"And we're all of us coming to see you again.",
+"And she waved her white hand as we passed the South Pier.",
+"They're all growing green in the North Countrie."]
+]},{"verse_1":[
+"I thought I heard the old man say",
+"We're homeward bound, I hear the sound.",
+"We sailed away to Mobile Bay.",
+"But now we're bound for Portsmouth Town.",
+"And soon we'll be ashore again.",
+"I kissed my Kitty upon the pier",
+"We're homeward bound, and I hear the sound."],
+"verse_2":[
+"I thought I heard the old man say",
+"We're homeward bound, I hear the sound.",
+"We sailed away to Mobile Bay.",
+"But now we're bound for Portsmouth Town.",
+"And soon we'll be ashore again.",
+"And it's oh to see you again my dear.",
+"We're homeward bound, and I hear the sound."],
+"chorus":""#verse_1#
+   Good-bye, fare ye well,
+   Good-bye, fare ye well.
+   #verse_2#
+   Hooray my boys we're homeward bound."""}]
+
+
+   
+=== Weighing Anchor ===
+
+# clear the deck, make ready
+"The crew #adjectively# cleared the capstan and made ready to weigh anchor."
+"The order was given, and soon the messenger was run out and the capstan manned."
+# capstan bars fitted to capstan
+"{crewmember} fitted the bars, and the #sailors# took their positions around the capstan."
+"{crewmember} took the bars from where they were stowed, and the #sailors# fitted them to the capstan."
+"\"Take your positions, you #sailors#,\" said {the boatswain}."
+"There came soon the familiar racket of making sail and trimming yards and the clank of the capstan pawls. "
+"The capstan bars were now fully manned."
+#pulling at the capstan
+"The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained.
+""That's your sort, my hearties," exclaimed {the boatswain} encouragingly, as {the boatswain} applied {the boatswain's} tremendous strength to the outer extremity of one of the bars, "heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!"
+"The #sailors# strained at the bars, the pawl clicking as they drove the capstan round.
+"The chorus of the shanty kept time with the clicks of the pawl.
+#sing a shanty
+["As the #sailors# turned the capstan, {the boatswain} took up the verse and the crew repeated the chorus: {SHANTY}", "The crew sang in time with their work: {SHANTY}", "As was their practice, they sang to maintain the rhythm. {SHANTY}"]
+# straining, it goes slowly...
+["The anchor held fast to the bottom, drawing the ship closer.", "The #sailors# strained against the wheel of the capstan, each rachet of the pawl a hard won fight."]
+# call out: at long stay / at short stay, up and down, anchors aweigh
+["\"At long stay,\" #the_call_went_out#, #the_crew_pushed#.", "#the_call_went_out.capitalize#: \"At long stay,\" #the_crew_pushed#", "As the capstan turned, the cable could be seen cutting through the surf.", "\"At long stay!\" #the_crew_pushed.capitalize#.", "\"At long stay!\""]
+["#the_crew_pushed.capitalize#, the anchor cable drawing taut.","\"At short stay,\" #the_call_went_out#, #the_crew_pushed#.", "The anchor cable was hauled aboard, #the_crew_pushed#.", "The cable drew taut, prompting the call: \"At short stay.\"","With each heave on the capstan, the ship was pulled closer to the anchor."]
+["Below the waves, the anchor began to shift, the top lifting off the seafloor, #the_crew_pushed#.",\"Up and down,\" #the_call_went_out#, as the anchor pulled vertical, still in contact with the seafloor.","The anchor's tilt prompted {the boatswain} to sing out, \"Up and down!\""]
+["And at last {the boatswain} called: \"Anchors aweigh!\"", "\"Anchors aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."]
+# catting the anchor
+{"{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
+
+
+
+
+preprocessing_table = {
+"the_call_went_out": ["the call went out", "sang out {the boatswain}", "cried {the boatswain}", "was the call", "came the cry", "said {the boatswain}, though it hardly took a keen eye to see it: the #sailors# could feel the strain"]
+"the_crew_pushed": ["and the crew pushed around with a will", "accompanied by the clank of the pawl", "the great cable hauled by the messenger as it was driven by the capstan", "by the sweat and strain of the crew as they pushed","and the crew heaved again","with another heave on the capstan","followed by the crew grunting as they gave the capstan another mighty shove"]
+"sailors":["sailors","tars"]
+"catting_1":["It took only a little more effort to bring the anchor up from the water, and the #sailors# completed the job with gusto.","Then the anchor flukes scraped and banged against the bow timbers.","With one last strain on the capstan, the anchor was brought to the cathead.", ""],
+"catting_2":["#sailors.capitalize# rushed to cat the anchor.","The anchor was soon secured to the cathead.","Once the anchor was catted, the #sailors# stowed the capstan bars again.",""],
+"catting_3":["The #ship# was alive and in motion.","The voyage was now properly begun.","The ship felt freer and lighter, as if it was glad to get underway.","","",""],
+"catting_4":["The vessel heeled a little and the lapping water changed its tune to a swash-swash as the hull pushed it aside.","",""],
+"weigh_anchor_long_stay":["\"At long stay,\" #the_call_went_out#, #the_crew_pushed#.", "#the_call_went_out.capitalize#: \"At long stay,\" #the_crew_pushed#", "As the capstan turned, the cable could be seen cutting through the surf.", "\"At long stay!\" #the_crew_pushed.capitalize#.", "\"At long stay!\""],
+"weigh_anchor_short_stay":{Cmd.action: ["#the_crew_pushed.capitalize#, the anchor cable drawing taut.","\"At short stay,\" #the_call_went_out#, #the_crew_pushed#.", "The anchor cable was hauled aboard, #the_crew_pushed#.", "The cable drew taut, prompting the call: \"At short stay.\"","With each heave on the capstan, the ship was pulled closer to the anchor."],
+"weigh_anchor_up_and_down":{Cmd.action: ["Below the waves, the anchor began to shift, the top lifting off the seafloor, #the_crew_pushed#.",\"Up and down,\" #the_call_went_out#, as the anchor pulled vertical, still in contact with the seafloor.","The anchor's tilt prompted {the boatswain} to sing out, \"Up and down!\""],
+"weigh_anchor_anchors_aweigh":{Cmd.action: ["And at last {the boatswain} called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
+}
+
+
+
+=== Pirate Names ===
+Olivier Levasseur
+Basilica Hands
+Bartholomew Roberts
+Hendrick Lucifer
+Hayreddin Barbarossa Baba Oruç Reis Redbeard
+Blackbeard
+Stede Bonnet
+Anne Bonny
+Abshir Boyah
+Laurens de Graaf
+Michel de Grammont
+Calico Jack
+Alexandre Exquemelin
+William Kidd
+Edward Low
+Redbeard
+William Dampier
+Black Caesar
+Henri Caesar
+Roberto Cofresí
+Jean Lafitte
+Henry Morgan
+Lawrence Prince
+François l'Olonnais
+Henry Strangways
+Charles Gibbs
+Benito de Soto
+Diabolito
+Pedro Gilbert
+Mansel Alcantra
+Hippolyte Bouchard
+Samuel Hall Lord
+Nathaniel Gordon
+Albert W. Hicks
+Eli Boggs
+Bully Hayes
+Rahmah ibn Jabir al-Jalahimah
+Louis-Michel Aury
+Shirahama Kenki
+John Newland Maffitt
+Joseph Baker
+Joseph Barss
+Jørgen Jørgensen
+Vincenzo Gambi
+Dominique You
+Pierre Lafitte
+John Hawkins
+Peter Easton
+Nicholas van Hoorn
+Moses Cohen Henriques
+Piet Pieterszoon Hein
+Charlotte de Berry
+Samuel Bellamy
+Benjamin Hornigold
+Samuel Mason
+Henry Every
+Roche Braziliano
+
+Gan Ning
+Liang Daoming
+Wang Zhi
+Limahong
+Zheng Zhilong
+Zheng Jing
+Cai Qian
+Cheung Po Tsai
+Ching Shih
+Shap Ng-tsai
+Chui A-poo
+Lai Choi San
+Fūma Kotarō
+
+
+=== Last Names
+Rackham
+Boyah
+al Hurra
+Killigrew
+Lindsey
+Gathenhielm
+Farlee
+Crickett
+Burn
+Wall
+Skytte
+Delahaye
+Strangwish
+Strangways
+Lord
+ibn Jabir al-Jalahimah
+Levasseur
+Hands
+Roberts
+Lucifer
+Hayreddin
+Barbarossa
+Tech
+Bonnet
+Bonny
+Boyah
+de Graaf
+de Grammont
+Exquemelin
+Kidd
+Low
+Redbeard
+Dampier
+Caesar
+Cofresí
+Lafitte
+Morgan
+Prince
+l'Olonnais
+Strangways
+Gibbs
+de Soto
+Munthe
+Gilbert
+Alcantra
+Bouchard
+Lord
+Gordon
+Hicks
+Boggs
+Hayes
+Aury
+Maffitt
+Baker
+Barss
+Jørgensen
+Gambi
+You
+Lafitte
+Hawkins
+Easton
+van Hoorn
+Henriques
+Hein
+de Berry
+Bellamy
+Hornigold
+Mason
+Every
+Braziliano
+Marks
+Marley
+
+Shirahama 
+Lim
+Chui
+Gan
+Liang
+Wang
+Zheng
+Zheng
+Cai
+Cheung
+Ching
+Shap
+Chui
+Lai
+Fūma
+
+=== Titles
+Calico Jack
+Calico
+Caesar
+Blackbeard
+Reis
+Barbarossa
+Redbeard
+Baba
+Black Caesar
+Diabolito
+Dieu-le-Veut
+Corsair
+Deepwater
+Captain Blood
+Bloody
+Bones
+Skull
+Hammer
+One-Eye
+Mercy
+Gunpowder
+Jolly Roger
+Irish
+BlackJack
+Diamonds
+Lucky
+Honorable
+Right Hon'ble
+Jonah
+Scar
+Wrath
+Gibbering
+The Lost
+Ahab
+Raja
+King
+Duke
+Squire
+Halfhand
+Back from the Dead
+Red
+
+
+=== Given Names
+Anne
+Mary
+Grace
+Jeanne
+Awilda
+Sayyida
+Elizabetha 
+Jacquotte
+Christina
+Christina Anna
+Maria
+Ingela 
+Flora
+Rachel
+Charlotte
+Bess
+Sao
+Shih
+Choi San
+Elane
+
+Lars
+Olivier
+Basilica
+Bartholomew
+Hendrick
+Hayreddin 
+Oruç
+Edward
+Stede
+Laurens
+Abshir 
+Michel
+Alexandre
+William
+Edward
+William
+Henri
+Roberto
+Jean
+Henry
+Lawrence
+François
+Henry
+Charles
+Benito
+
+Pedro
+Mansel
+Hippolyte
+Samuel Hall
+Nathaniel 
+Albert W. 
+Eli
+Bully 
+Rahmah 
+Louis-Michel
+Kenki
+John Newland
+Joseph
+Joseph
+Jørgen
+Vincenzo
+Dominique
+Pierre
+John
+Peter
+Nicholas
+Moses Cohen
+Piet Pieterszoon
+Samuel
+Benjamin
+Samuel
+Henry
+Roche
+
+Ning
+Daoming
+Zhi
+Hong
+Zhilong
+Jing
+Qian
+Po Tsai
+Ng-tsai
+Kotarō
+
+=== Pirate Ship Names
+Revenge
+#Name#'s Revenge
+Ranger
+Carolina
+Robert
+Good Intent
+Walrus
+Margaret
+Crowley
+Bentenmaru
+Black Flag
+Crossbones
+
+=== OTher Ship Names
+Merchant Adventurer
+Medford
+Melita
+Mentor
+Mercator
+Merchant
+Merchant's Hope
+Mercury
+Mermaid
+Merryland Merchant
+Montague
+Monomia
+Nansimum
+Nassau
+Neptune's Barge
+Newry Assistance
+den Norske Klippe
+Nuestra Ira
+Nymph
+Numa
+Olive
+Octavia
+Oake
+Ocean
+Olive Tree
+Oracle
+Only Son
+Only Daughter
+Onslow
+Orient
+Orion
+Orison
+Orizimbo
+Oryza
+Orleans
+Osgood
+Ossian
+Oswego
+Pacific
+Pallas
+Packet Eliza
+Patience
+Philedini
+Phanton 
+Plaisance
+Pineapple
+Pied Cow
+Pleasant
+Pleasure
+Plough of Woolwich
+Polly
+Pomona
+Poppett
+Port Royal
+Portia
+Portland
+Portsmouth
+Post Boy
+Postilion
+Princess Caroline
+Priscilla
+Prosperity
+Prosperous
+Prophet Daniel
+de Pumerlander
+Queen Margaret
+Rachel
+Radius
+Rainbow
+Rajah
+Rambler
+Rathornis
+Rawley
+Rebecca
+Restoration
+Resolution
+Regard
+Reindeer
+Recovery
+Recovery II
+Unsinkable II
+Richard & Ann
+Reuben & Eliza
+Rosetta
+Rosevvay
+Rose
+Ross
+Rotchell Merchant
+Rover
+Rowand
+Spring
+Roxana
+Royal Charlotte
+Royal Exchange
+Royal Judith
+Royal Oak
+Royal Union
+Sarah Sheaffe
+Savage
+Savary
+Schuylkill
+Scipio
+Scorton Polly
+Sea Adventure
+Sea Bird
+Sea Gull
+Sea Serpent
+Sea Venture
+Seaflower
+Sebella
+Sibella
+Semerest
+Somerest
+Seneca
+Serpent
+Servant
+Seven Friends
+Seven Sisters
+Shallopp
+Shamrock
+Shannon
+Shield
+Success's Increase
+Tobacco Plant
+Ulysses
+Unanimity
+Unicorne
+Two Friends
+Tryphena
+Truth & Delight
+het Wapen van Noorwegen
+het Wappen van Rensselaerswyck
+Warren
+Warrington
+Warwick
+Washington
+Wasp
+Water Witch
+den Waterhondt
+Waterloo
+Weatherell
+Welcome
+Wellington
+Weser
+Westpoint
+Weymouth
+Whale
+White Angel
+White Oak
+Wicker
+Wilhelmine Charlotte
+
+
+== Navy Ships
+Valona
+Van Stephorst
+Vanson
+Venus
+Vernon
+Verny
+Vestal
+Victoire
+Victoria
+Victory
+Vigilant
+Vigorous
+Vine
+Vineyard
+Virgin
+Virginia
+Virgins Venture
+Virginus Grace
+Virtuous Grace
+Visitor
+Volant
+Voltaire
+Volunteer
+de Vos
+Vrow Anna
+
+
+
+
+
 
