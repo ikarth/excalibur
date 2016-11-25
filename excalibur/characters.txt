@@ -215,6 +215,114 @@ preprocessing_table = {
 }
 
 
+==== Pirate Quirks ====
+
+spits before talking
+sings to greet the dawn
+obsessively reties knots
+mutters numbers continually
+fishes as often as possible
+once saw a three-legged gull
+
+
+=== Voyage ===
+- The Ship vs. The Sea
+- Ship sets out towards a destination
+- Making ready, taking on supplies
+- Weighing anchor
+- Sailing out of port
+- Adjusting the sails and following the wind
+- Navigating, 
+
+- Sighting an island
+
+
+- Becalmed
+
+
+=== Ship Types ===
+
+{"brig": 
+ {"masts": 
+  [["foremast", "square-rigged"],["main mast","square-rigged"]],
+  "tonnage":300,
+  "crew complement":[16, 155],
+  "gun complement":20,
+  "speed":[0, 1, 2, 5, 5]# in irons, close-hauled, beam-reach, broad reach, running
+  },
+"barque":
+{"masts": 
+  [["foremast", "square-rigged"],["main mast","square-rigged"],["mizzenmast","fore-and-aft rigged"]],
+  "tonnage":350,
+  "crew complement":[12, 94],
+  "gun complement":22,
+  "speed":[0, 3, 4, 4, 4]# in irons, close-hauled, beam-reach, broad reach, running
+  },
+"barquentine":
+{"masts": 
+  [["foremast", "square-rigged"],["main mast","fore-and-aft rigged"],["mizzenmast","fore-and-aft rigged"]],
+  "tonnage":300,
+  "crew complement":[10, 74],
+  "gun complement":20,
+  "speed":[0, 4, 4, 4, 4]# in irons, close-hauled, beam-reach, broad reach, running
+  },
+"frigate": 
+ {"masts": 
+  [["foremast", "square-rigged"],["main mast","square-rigged"],["mizzenmast","square-rigged"]],
+  "tonnage":2000,
+  "crew complement":[50, 450],
+  "gun complement":52,
+  "speed":[0, 1, 1, 5, 6]# in irons, close-hauled, beam-reach, broad reach, running
+  },
+"mistico": 
+ {"masts": 
+  [["jib"]["foremast", "lateen sail"],["main mast","lateen sail"]],
+  "tonnage":80,
+  "crew complement":[5, 9],
+  "gun complement":4,
+  "speed":[0, 4, 5, 5, 3]# in irons, close-hauled, beam-reach, broad reach, running
+  }
+  }
+
+
+proa, 1 mast, fore-and-aft rigged, outrigger
+catboat, 1 mast, mast well forward, fore-and-aft rigged
+sloop, 1 mast, fore-and-aft rigged
+cutter, 1 mast, fore-and-aft rigged, 6 cannon, 
+ketch, small, 2 masts, fore-and-aft rigged
+yawl, small, 2 masts, fore-and-aft rigged
+schooner, 2 masts, fore-and-aft rigged
+barque, 3 masts, fore-and-aft rigged on the aft mast
+barquentine, 3 masts, fore-and-aft rigged on all but the foremost mast
+bireme, two banks of oars
+brig, 2 masts, 300 ton, 16-155 crew, 20 guns, square rigged
+brigantine, 2 masts, square-rigged on the foremost and fore-and-aft rigged o the main
+caravel, 2 masts, small
+carrack
+boita
+cartel
+cog
+felucca, 1 mast, 3 crew, lateen sails,
+dhow, 1 mast, lateen sails, 24 crew
+fluyt, 3 masts, square-rigged
+galleass, sailing and rowing
+galleon
+galley, rowing with a sail
+karve
+knarr
+mistico
+nef
+settee
+shallop, fore-and-aft rigged
+xebec, 3 masts, lateen sails, 160 tons, 18 guns
+fusta, 32 crew, 1 mast, lateen sails, shallow draft, 3 guns
+
+corvette
+frigate
+ship-of-the-line
+man-of-war
+
+
 
 === Pirate Names ===
 Olivier Levasseur
@@ -707,8 +815,21 @@ Volunteer
 de Vos
 Vrow Anna
 
+=== The Sea
+
+{PAR}Much has been said of the sunrise at sea; but it will not compare with the sunrise on shore. It lacks the accompaniments of the songs of birds, the awakening hum of humanity, and the glancing of the first beams upon trees, hills, spires, and house-tops, to give it life and spirit. There is no scenery. But, although the actual rise of the sun at sea is not so beautiful, yet nothing will compare for melancholy and dreariness with the early breaking of day upon \"Old Ocean's gray and melancholy waste.\"
+
+{PAR}There is something in the first gray streaks stretching along the eastern horizon and throwing an indistinct light upon the face of the deep, which combines with the boundlessness and unknown depth of the sea around, and gives one a feeling of loneliness, of dread, and of melancholy foreboding, which nothing else in nature can. This gradually passes away as the light grows brighter, and when the sun comes up, the ordinary monotonous sea day begins.
 
 
 
+
+
+
+The next day broke bright and clear; both wind and cloud had fled; the sea had gone down, and the vessel was under easy sail. A flock of gulls were circling in the morning air, screaming with delight as they picked the crumbs that floated astern; and all went merrily oh!
+
+=== Cats 
+
+No one in the ship had the slightest idea how Tom came on board, or who brought him, or where he came from. He made his first appearance in public while, outward bound, we were crossing the Bay of Biscay—that strange mysterious sea, beneath whose waves the bones of so many of our bravest countrymen lie bleaching. It was a roughish night, squally rather, without much sea on, but the wind changing its mind every minute, whisking into foam the crests of the inky waves, and carrying the spray far into the rigging. It was a night to try the sea-legs of any one, so jerky and uncertain was the vessel’s motion; and the oldest sailors staggered like drunken men, and were fain to cling to rigging or shrouds. I was smoking on the quarter-deck just before turning in,—it had gone six bells[13] in the first watch, and[Pg 441] everything was snug for the night, when something black as Erebus whisked past me, visible but for a moment in the binnacle’s light, and disappeared in the darkness forward. I looked inquiringly at the man at the wheel, a serious old seamen, who, in answer to my mute appeal, turned his quid twice in his mouth and, addressing the compass, “That’s the devil, sir,” said he, “begging your pardon, sir. Came on board to-night when we close-reefed topsails durin’ a squall.”
 
 

@@ -5405,5 +5405,6 @@ def loadCorpus(filename):
 
 def activateCorpus():
     loadCorpusFromText(loadSelectedTextsPublicDomain(6000))
+    saveCorpus("sixk")
     actionsFromCurrentCorpus()
     saveCorpus("sixk")

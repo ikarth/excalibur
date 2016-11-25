@@ -8,6 +8,7 @@ import sys
 from character import Character
 from character import generatePirate
 import tracery
+import uuid
 
 class Cmd(Enum):
     current_actor = 1 # character currently acting, set dynamically
@@ -16,12 +17,29 @@ class Cmd(Enum):
     prereq = 4
     effects = 5
     last_time = 999
+
+def is_decay_in_efx(efx):
+    if not isinstance(efx, str):
+        return False
+    return ("decay" in efx)
+        
     
-def translateActionDescription(action):
-    actor = action[Cmd.current_actor]
-    target = action[Cmd.current_target] 
+
+def translateActionDescription(action, specific_item = None):
+    print(action)
+    print(action.get(Cmd.current_actor))
+    actor = action.get(Cmd.current_actor)
+    target = action.get(Cmd.current_target)
     # TODO: translate the variables into their description forms
-    action_string = action[Cmd.action]
+    action_string = action.get(Cmd.action)
+    if not (specific_item is None):
+        action_string = specific_item
+    if (not isinstance(action_string, str)) or (not hasattr(action_string, "replace")):
+        if isinstance(action_string, collections.Iterable):
+            for asi in action_string:
+                translateActionDescription(action, asi)
+        else:
+            return action_string
     action_string = action_string.replace("{ACTOR}", actor.name)
     action_string = action_string.replace("{ANTAGONIST}", target.name)
     action_string = action_string.replace("{ACTOR_WEAPON}", actor.weapon_name)
@@ -51,6 +69,7 @@ def translateActionDescription(action):
 class ActionProcessor:
     def __init__(self):
         self.queue = collections.deque()
+        self._uuid = uuid.uuid4()
         
     def addAction(self, act):
         self.queue.append(act)
@@ -64,10 +83,12 @@ class ActionProcessor:
             if not act is None:
                 if Cmd.effects in act:
                     for efx in act[Cmd.effects]:
-                        effect_bag = efx({"action": act, "tags": effect_bag})
+                        get_effect_bag = efx({"action": act, "tags": effect_bag})
+                        if not get_effect_bag is None:
+                            effect_bag = get_effect_bag
                 effect_bag = +effect_bag # remove zero and negative counts
                 for efx in list(effect_bag): # some signals decay over time...
-                    if "decay" in efx:
+                    if is_decay_in_efx(efx):
                         effect_bag.subtract([efx])
                 effect_bag = +effect_bag # remove zero and negative counts
         return effect_bag
@@ -83,6 +104,8 @@ class ActionProcessor:
 def expandTag(tag, actor, target):
     tag = tag.replace("{ACTOR}", actor.id)
     tag = tag.replace("{TARGET}", target.id)
+    tag = tag.replace("{ACTOR SHIP}", actor.ship_id)
+    tag = tag.replace("{TARGET SHIP}", target.ship_id)
     return tag
     
 def expandTagFromState(tag, state):
@@ -93,6 +116,8 @@ def expandTagFromAction(tag, state):
                
 class Conflict:
     def __init__(self, action_catalog, protagonist, antagonist):
+        self._sub_conflicts = []
+        self._parent_conflict = None
         self.char_one = protagonist#Character("Robin Hood")
         self.char_two = antagonist#Character("Sir Galahad")
         self.action_processor = ActionProcessor()
@@ -109,8 +134,25 @@ class Conflict:
         self.action_processor.addAction(action)
         
     def currentState(self):
-        #self.current_state = 
+        return self.currentTotalState()
+        
+    def currentSelfState(self):
         return self.action_processor.currentState()
+        
+    def currentChildState(self):
+        """
+        Returns the conflict-state of all the children sub-conflicts.
+        """
+        conflict_sum = collections.Counter()
+        for sc in self._sub_conflicts:
+            conflict_sum.update(sc.currentTotalState())
+        return conflict_sum
+        
+    def currentTotalState(self):
+        conflict_sum = self.currentSelfState()
+        conflict_sum.update(self.currentChildState())
+        return conflict_sum
+        
     
     def currentTranscript(self):
         return self.action_processor.currentTranscript()
@@ -165,6 +207,15 @@ class Conflict:
         self.hideAction(next_action) # this action has been spent. 
         # Remove it from consideration until later...
         
+def efx_resolve_conflict(state):
+    """
+    When the conflict is finished, finalize the results by propagating the
+    important state changes up to the parent conflict.
+    """
+    effects = state["tags"]
+    # TODO: implement conflict resolution
+    return effects
+        
         
 def Fight(conflict):
     conflict.performNextAction(0)
@@ -186,19 +237,23 @@ def WeighAnchor(conflict):
         
 def in_combat(state):
     cur_tags = state["conflict"].currentState()
-    if ("end combat" in cur_tags):
+    if (expandTagFromState("end combat {ACTOR}", state) in cur_tags):
         return False
-    if ("begin combat" in cur_tags):
+    if (expandTagFromState("begin combat {ACTOR}", state) in cur_tags):
         return False
-    return ("in combat" in cur_tags)
+    return (expandTagFromState("in combat {ACTOR}", state) in cur_tags)
     
 def not_in_combat(state):
     cur_tags = state["conflict"].currentState()
-    return not ("in combat" in cur_tags)
+    return not (expandTagFromState("in combat {ACTOR}", state) in cur_tags)
+
+def if_end_combat(state):
+    cur_tags = state["conflict"].currentState()
+    return (expandTagFromState("end combat {ACTOR}", state) in cur_tags)
     
 def not_end_combat(state):
     cur_tags = state["conflict"].currentState()
-    return not ("end combat" in cur_tags)
+    return not (expandTagFromState("end combat {ACTOR}", state) in cur_tags)
 
 def can_proact(state):
     """
@@ -415,8 +470,10 @@ def efx_parry(state):
 
 def efx_end_combat(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("end combat", state)])
-    del effects[expandTagFromAction("in combat", state)]
+    effects.update([expandTagFromAction("end combat {ACTOR}", state)])
+    effects.update([expandTagFromAction("end combat {TARGET}", state)])
+    del effects[expandTagFromAction("in combat {ACTOR}", state)]
+    del effects[expandTagFromAction("in combat {TARGET}", state)]
     return effects
     
 def efx_emotion_anger_actor(state):
@@ -440,7 +497,8 @@ def efx_clear_signal_broken_weapon(state):
 
 
 swordfight_actcat = [
-{Cmd.prereq: [not_in_combat, not_end_combat], Cmd.effects: [efx_signal_start_combat], Cmd.action: "BEGIN"},
+{Cmd.prereq: [not_in_combat, not_end_combat], Cmd.effects: [efx_signal_start_combat], Cmd.action: "{BEGIN: MELEE COMBAT}"},
+{Cmd.prereq: [not_in_combat, if_end_combat], Cmd.effects: [efx_resolve_conflict], Cmd.action: "{END: MELEE COMBAT}"},
 #Begin
 {Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "In a moment {ACTOR} stepped quickly {UPON THE PLACE} where {ANTAGONIST} stood."},
 {Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "At last {ACTOR} struck like a flash, and--\"rap!\"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow; and so this mighty battle began."},
@@ -526,7 +584,10 @@ def if_weighing_anchor(state):
     return is_tag_count_positive("weighing anchor {ACTOR SHIP}", state)
 
 def if_weighing_anchor_end(state):
-    return is_tag_count_positive("weighing anchor end{ACTOR SHIP}", state)
+    return is_tag_count_positive("weighing anchor end {ACTOR SHIP}", state)
+
+def if_begin_weighing_anchor(state):
+    return is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
 
 #def begin_weighing_anchor(state):
 #    return is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
@@ -543,6 +604,9 @@ def not_weighing_anchor(state):
 def not_weighing_anchor_end(state):
     return not is_tag_count_positive("weighing anchor end {ACTOR SHIP}", state)
     
+def not_begin_weighing_anchor(state):
+    return not is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
+    
 def not_anchor_struggle(state):
     return not is_tag_count_positive("anchor struggle {ACTOR SHIP}", state)
     
@@ -553,38 +617,42 @@ def is_tag_count_greater_than(tag, than, state):
 
 def is_tag_count_less_than(tag, than, state):
     cur_tags = state["conflict"].currentState()
-    if (expandTagFromState(tag, state) in cur_tags):
-        return cur_tags[expandTagFromState(tag, state)] < than
+    #if (expandTagFromState(tag, state) in cur_tags):
+    return cur_tags[expandTagFromState(tag, state)] < than
                         
 def if_anchor_at_long_stay(state):
     return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 10, state)
+    return is_tag_count_greater_than("turning capstan {ACTOR SHIP}", 8, state)
 
 def if_anchor_at_short_stay(state):
     return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 7, state)
+    return is_tag_count_greater_than("turning capstan {ACTOR SHIP}", 5, state)
 
 def if_anchor_at_up_and_down(state):
     return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 4, state)
+    return is_tag_count_greater_than("turning capstan {ACTOR SHIP}", 2, state)
 
 def if_anchor_at_anchor_aweigh(state):
     return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 2, state)
+    
 
 def efx_signal_start_weigh_anchor(state):
     effects = state["tags"]
     effects.update([expandTagFromAction("signal start weigh anchor {ACTOR SHIP}", state)])
     effects.update([expandTagFromAction("weighing anchor {ACTOR SHIP}", state)])
-    #effects = efx_clear_signal(state, expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state))
+    effects.update([expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state)])
     return effects
     
 def efx_signal_prepare_capstan(state):
     effects = state["tags"]
     effects.update([expandTagFromAction("signal prepare capstan {ACTOR SHIP}", state)])
     effects = efx_clear_signal(state, expandTagFromAction("signal start weigh anchor {ACTOR SHIP}", state))
-    #effects = efx_clear_signal(state, expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state))
     return effects
     
 def efx_begin_turning_capstan(state):
     effects = state["tags"]
     effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 12
+    effects[expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state)] = 0
     effects = efx_clear_signal(state, expandTagFromAction("signal prepare capstan {ACTOR SHIP}", state))
     return effects
     
@@ -602,8 +670,9 @@ def efx_end_weigh_anchor(state):
     effects = state["tags"]
     effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 0
     effects[expandTagFromAction("weighing anchor {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state)] = 0
     effects[expandTagFromAction("anchor aweigh {ACTOR SHIP}", state)] = 1
-    effects[expandTagFromAction("end weigh anchor {ACTOR SHIP}", state)] = 1
+    effects[expandTagFromAction("weighing anchor end {ACTOR SHIP}", state)] = 1
     effects = efx_clear_signal(state, expandTagFromAction("weighing anchor {ACTOR SHIP}", state))
     return effects
     
@@ -612,9 +681,10 @@ weigh_anchor_actcat = [
 #Temp: an order to jumpstart the conflict
 {Cmd.prereq: [not_weighing_anchor, not_weighing_anchor_end, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
 {Cmd.prereq: [not_weighing_anchor, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
+{Cmd.prereq: [if_weighing_anchor_end, not_weighing_anchor, if_anchor_aweigh], Cmd.effects: [efx_resolve_conflict], Cmd.action: "{END: WEIGH ANCHOR}"},
 # clear the deck, make ready
-{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
-{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "The order was given, and soon the messenger was run out and the capstan manned."},
+{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
+{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The order was given, and soon the messenger was run out and the capstan manned."},
 # capstan bars fitted to capstan
 {Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} fitted the bars, and the #sailors# took their positions around the capstan."},
 {Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
@@ -631,13 +701,25 @@ weigh_anchor_actcat = [
 # straining, it goes slowly...
 {Cmd.prereq: [if_turning_capstan, if_anchor_struggle], Cmd.effects: [], Cmd.action: ["The anchor held fast, drawing line tighter and pulling the ship closer.", "The #sailors# strained against the wheel of the capstan, each rachet of the pawl a hard won fight."]},
 # call out: at long stay / at short stay, up and down, anchors aweigh
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "#weigh_anchor_long_stay#"},
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "#weigh_anchor_short_stay#"},
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "#weigh_anchor_up_and_down#"},
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "#weigh_anchor_aweigh#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_long_stay#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_short_stay#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_up_and_down#"},
+{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_aweigh#"},
 # catting the anchor
-{Cmd.prereq: [if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_end_weigh_anchor], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
+{Cmd.prereq: [if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor], Cmd.effects: [efx_end_weigh_anchor, efx_resolve_conflict], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
 ]
+
+# Voyage: Ship vs. the Sea
+ship_voyage = []
+
+ship_leave_port = []
+
+ship_grounded = [
+#{Cmd.prereq: [respond_start_pull_off], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}With the anchor secured, the messenger was run out and the capstan manned."},                 
+]
+
+
+
 
 postprocessing_table = {
 "the_call_went_out": ["the call went out", "sang out {THE BOATSWAIN}", "cried {THE BOATSWAIN}", "was the call", "came the cry", "said {THE BOATSWAIN}, though it hardly took a keen eye to see it: the #sailors# could feel the strain"],
