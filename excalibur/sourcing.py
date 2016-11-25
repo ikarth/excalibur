@@ -24,7 +24,7 @@ from gutenberg.acquire import get_metadata_cache
 # I always favor implementing the specific uses first and wait to do the 
 # architecture until you know what it actually needs to look like.
 
-recache_stripped_files = False
+recache_stripped_files = True
 
 if not 'cache' in globals():
     #cache = gutenberg.acquire.metadata.SqliteMetadataCache('./data/gutenberg/metadata/cache_sqlite')
@@ -394,7 +394,9 @@ def getActionCorpus(textcorpus):
     count = 0
     for d in textcorpus:
         count += 1
-        print("_", end="")
+        if count % 100 is 0:
+            print(" {0} of {1} ".format(count, len(textcorpus)))
+        print("-", end="")
         action_list.extend(buildSourceActionsFromDoc(d))
     return action_list
     
