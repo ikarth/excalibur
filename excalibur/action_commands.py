@@ -9,6 +9,7 @@ from character import Character
 from character import generatePirate
 import tracery
 import uuid
+import weakref
 
 class Cmd(Enum):
     current_actor = 1 # character currently acting, set dynamically
@@ -16,6 +17,7 @@ class Cmd(Enum):
     action = 3
     prereq = 4
     effects = 5
+    command = 6
     last_time = 999
 
 def is_decay_in_efx(efx):
@@ -28,16 +30,17 @@ def is_decay_in_efx(efx):
 def translateActionDescription(action, specific_item = None):
     print(action)
     print(action.get(Cmd.current_actor))
+    print(specific_item)
     actor = action.get(Cmd.current_actor)
     target = action.get(Cmd.current_target)
     # TODO: translate the variables into their description forms
     action_string = action.get(Cmd.action)
     if not (specific_item is None):
         action_string = specific_item
-    if (not isinstance(action_string, str)) or (not hasattr(action_string, "replace")):
+    if (not isinstance(action_string, str)) or (not (hasattr(action_string, "replace"))):
         if isinstance(action_string, collections.Iterable):
             for asi in action_string:
-                translateActionDescription(action, asi)
+                return translateActionDescription(action, asi)
         else:
             return action_string
     action_string = action_string.replace("{ACTOR}", actor.name)
@@ -70,9 +73,25 @@ class ActionProcessor:
     def __init__(self):
         self.queue = collections.deque()
         self._uuid = uuid.uuid4()
+        self._parent = None
         
     def addAction(self, act):
         self.queue.append(act)
+        # Commands are effects that operate on something other than 
+        # the effects bag. They are expected to have side effects.
+        # They also take effect immidiately, rather than being put
+        # in the effects queue.
+        if Cmd.command in act:
+            for cmd_efx in act[Cmd.command]:
+                self.executeCommand(cmd_efx)
+                
+    @property
+    def parent(self):
+        return self._parent
+        
+    @parent.setter
+    def parent(self, newparent):
+        self._parent = weakref.ref(newparent) 
             
     def currentState(self):
         """
@@ -91,7 +110,11 @@ class ActionProcessor:
                     if is_decay_in_efx(efx):
                         effect_bag.subtract([efx])
                 effect_bag = +effect_bag # remove zero and negative counts
+                
         return effect_bag
+        
+    def executeCommand(self):
+        return # TODO
     
     def currentTranscript(self):
         transcript = []
@@ -121,6 +144,7 @@ class Conflict:
         self.char_one = protagonist#Character("Robin Hood")
         self.char_two = antagonist#Character("Sir Galahad")
         self.action_processor = ActionProcessor()
+        self.action_processor.parent = self
         self.deck_of_actions = action_catalog
         #self.current_state = []
         self.actions_last_time = []
@@ -206,6 +230,9 @@ class Conflict:
         self.performAction(acting, targeting, next_action)
         self.hideAction(next_action) # this action has been spent. 
         # Remove it from consideration until later...
+        
+    def spawnSubconflict(conf):
+        return # TODO
         
 def efx_resolve_conflict(state):
     """
@@ -708,6 +735,11 @@ weigh_anchor_actcat = [
 # catting the anchor
 {Cmd.prereq: [if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor], Cmd.effects: [efx_end_weigh_anchor, efx_resolve_conflict], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
 ]
+
+def cmd_efx_weigh_anchor(actproc):
+    subconflict = Conflict()
+    actproc.parent.spawnSubconflict(subconflict)
+    return # TODO
 
 # Voyage: Ship vs. the Sea
 ship_voyage = []
