@@ -2,6 +2,7 @@
 
 import tracery
 import random
+from uuid import uuid4
 
 class Character:
     def __init__(self, char_name, char_gender="female"):
@@ -14,6 +15,7 @@ class Character:
         self._gender = char_gender
         self._crew_title = ""
         self._ship_id = ""
+        self._uuid = uuid4()
     
     @property
     def id(self):
