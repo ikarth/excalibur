@@ -156,7 +156,7 @@ def singShantySubset(shanty):
     output += singShantyVerse(shanty, 0)
     for v in singing_verses:
         output += singShantyVerse(shanty, v)
-    return output
+    return output + "\n"
     
 def singShanty(char, actor, target):
     return singShantySubset(random.choice(shanties))

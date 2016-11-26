@@ -8,6 +8,7 @@ class Character:
     def __init__(self, char_name, char_gender="female"):
         self._id = char_name.upper().replace(" ", "_").replace("\"", "_").replace("\'", "_")
         self._full_name = char_name
+        self._plain_name = char_name
         self._nickname = ""
         self._given_name = char_name
         self._family_name = ""
@@ -395,11 +396,17 @@ def generatePirate():
     fullname = namestring.format(family_name, pirate_title, given_name)
     if westeast is "western_family_name":
         fullname = namestring.format(given_name, pirate_title, family_name)
-    
+    plain_namestring = namestring.replace("\"","").replace("{1}","").replace("  "," ").strip()
+    plainname = plain_namestring.format(family_name, pirate_title, given_name)
+    if westeast is "western_family_name":
+        plainname = plain_namestring.format(given_name, pirate_title, family_name)
+    if "" == plainname:
+        plainname = fullname
     pirate = Character(fullname, gender)
     pirate._nickname = pirate_title
     pirate._given_name = given_name
     pirate._family_name = family_name
+    pirate._plain_name = plainname
     pirate._name_style = westeast
     pirate.weapon_name = random.choice(melee_weapons_swords)
     pirate.weapon_tags = ["weapon_type_sword"]

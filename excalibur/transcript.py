@@ -22,7 +22,7 @@ postprocessing_table = {
 "catting_2":["#sailors.capitalize# rushed to cat the anchor.","The anchor was soon secured to the cathead.","Once the anchor was catted, the #sailors# stowed the capstan bars again.",""],
 "catting_3":["The #ship_type# was alive and in motion.","The voyage was now properly begun.","The ship felt freer and lighter, as if it was glad to get underway.","","",""],
 "catting_4":["The vessel heeled a little and the lapping water changed its tune to a swash-swash as the hull pushed it aside.","",""],
-"weigh_anchor_long_stay":["\"At long stay,\" #the_call_went_out#, #the_crew_pushed#.", "#the_call_went_out.capitalize#: \"At long stay,\" #the_crew_pushed#", "As the capstan turned, the cable could be seen cutting through the surf.", "\"At long stay!\" #the_crew_pushed.capitalize#.", "\"At long stay!\""],
+"weigh_anchor_long_stay":["\"At long stay,\" #the_call_went_out#, #the_crew_pushed#.", "#the_call_went_out.capitalize#: \"At long stay,\" #the_crew_pushed#", "As the capstan turned, the cable could be seen cutting through the surf.", "\"At long stay!\" The capstan turned, #the_crew_pushed#.", "\"At long stay!\""],
 "weigh_anchor_short_stay": ["#the_crew_pushed.capitalize#, the anchor cable drawing taut.","\"At short stay,\" #the_call_went_out#, #the_crew_pushed#.", "The anchor cable was hauled aboard, #the_crew_pushed#.", "The cable drew taut, prompting the call: \"At short stay.\"","With each heave on the capstan, the ship was pulled closer to the anchor."],
 "weigh_anchor_up_and_down": ["Below the waves, the anchor began to shift, the top lifting off the seafloor, #the_crew_pushed#.","\"Up and down,\" #the_call_went_out#, as the anchor pulled vertical, still in contact with the seafloor.","The anchor's tilt prompted {THE BOATSWAIN} to sing out, \"Up and down!\"","\"Up and down,\" #the_call_went_out, and the crew knew the end of their task was near."],
 "weigh_anchor_anchors_aweigh": ["And at last {THE BOATSWAIN} called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
@@ -110,10 +110,38 @@ def interpertString(text, actor, target):
     grammar.add_modifiers(base_english)
     output = grammar.flatten(str(text))
     output = transcribeCommands(output, actor, target)
+    output = grammar.flatten(str(output))
     if output[-1] in "\".?!$\n": # End of a sentence
         output = output + " " # Add a space
     # TODO: combine quotes together and break on speaker change
     return output
+    
+def makeTitlePageFromShip(script):
+    text = script.get(Cmd.transcript)
+    actor = script.get(Cmd.current_actor)
+    target = script.get(Cmd.current_target)
+    captain = actor.getCaptain()
+    nick = captain._nickname
+    if nick == None:
+        nick = "The Great Adventurer"
+    title_rules = {"title_voyages":["Voyages","Life and Times","Piracies","Legend","Story","Adventures","Sea Voyages","Tale","Many Voyages"],
+                   "captain_name": [str(captain._plain_name)],
+                   "captain_nickname": [str(nick)],
+                   "ship_name":[str(actor.name)],
+                   "ship_mast_count":[str(len(actor._masts))],
+                   "ship_type": [str(actor._ship_type)],
+                   "subtitle": ["in the good ship\n_#ship_name#_\na #ship_mast_count#-masted #ship_type#", "being a true account\nof the\nadventures\nof the\n_#ship_name#_"],
+                   "book_title": "The #title_voyages# of #captain_name#"
+                   }
+    print(title_rules)
+    grammar = tracery.Grammar(title_rules)
+    book_title = grammar.flatten("#book_title#")
+    title_rules.update({"book_title_fixed": [str(book_title)]})
+    print(title_rules)
+    grammar = tracery.Grammar(title_rules)
+    title_text = grammar.flatten("\n#book_title_fixed#\nalso known as\n\"#captain_nickname#\"\n#subtitle#\n")    
+    return "% {0}\n% Isaac Karth\n\n{1}".format(book_title, title_text)
+    
 
 def compileTranscript(story_transcript):
     return interpertLine(story_transcript, None, None)
