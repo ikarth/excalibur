@@ -7,9 +7,15 @@ import numpy.random
 import sys
 from character import Character
 from character import generatePirate
+from character import generatePirateShip
+from character import generateTheSea
 import tracery
 import uuid
 import weakref
+
+# For debugging...
+from IPython.utils import coloransi
+from IPython.core import prompts
 
 class Cmd(Enum):
     current_actor = 1 # character currently acting, set dynamically
@@ -24,16 +30,42 @@ def is_decay_in_efx(efx):
     if not isinstance(efx, str):
         return False
     return ("decay" in efx)
+
+
+def buildTranslationTable(actor, target):
+    ttable = []
+    ("{ACTOR}", actor.name)
+    ttable.append(["{ANTAGONIST}", target.name])
+    ttable.append(["{ACTOR_WEAPON}", actor.weapon_name])
+    ttable.append(["{ANTAGONIST_WEAPON}", target.weapon_name])
+    ttable.append(["{TARGET_WEAPON}", target.weapon_name])
+    ttable.append(["{ANTAGONIST'S}", target.possessive])
+    ttable.append(["{TARGET}", target.name])
+    ttable.append(["{TARGET'S}", target.possessive])
+    ttable.append(["{ACTOR'S}", actor.possessive])
+    ttable.append(["{TARGET_HIM}", target.him])
+    ttable.append(["{ACTOR_HIM}", actor.him])
+    ttable.append(["{ANTAGONIST_HER}", target.him])
+    ttable.append(["{ANTAGONIST_HIM}", target.him])
+    ttable.append(["{TARGET_HER}", target.him])
+    ttable.append(["{ACTOR_HER}", actor.him])
+    ttable.append(["{ANTAGONIST_SELF}", target.herself])
+    ttable.append(["{TARGET_SELF}", target.herself])
+    ttable.append(["{ACTOR_SELF}", actor.herself])
+    # TODO: replace the following with actual lookups
+    ttable.append(["{ACTOR_ATTRIBUTE}", "skill"])
+    ttable.append(["{ANTAGONIST_ATTRIBUTE}", "strength"])
+    ttable.append(["{ACTOR_WEAPON_SOUND}", "clank"])
+    ttable.append(["{ANTAGONIST_ARMOR}", "leather cap"])
         
     
 
 def translateActionDescription(action, specific_item = None):
-    print(action)
-    print(action.get(Cmd.current_actor))
-    print(specific_item)
+    #print(action)
+    #print(action.get(Cmd.current_actor))
+    #print(specific_item)
     actor = action.get(Cmd.current_actor)
     target = action.get(Cmd.current_target)
-    # TODO: translate the variables into their description forms
     action_string = action.get(Cmd.action)
     if not (specific_item is None):
         action_string = specific_item
@@ -43,29 +75,12 @@ def translateActionDescription(action, specific_item = None):
                 return translateActionDescription(action, asi)
         else:
             return action_string
-    action_string = action_string.replace("{ACTOR}", actor.name)
-    action_string = action_string.replace("{ANTAGONIST}", target.name)
-    action_string = action_string.replace("{ACTOR_WEAPON}", actor.weapon_name)
-    action_string = action_string.replace("{ANTAGONIST_WEAPON}", target.weapon_name)
-    action_string = action_string.replace("{TARGET_WEAPON}", target.weapon_name)
-    action_string = action_string.replace("{ANTAGONIST'S}", target.possessive)
-    action_string = action_string.replace("{TARGET}", target.name)
-    action_string = action_string.replace("{TARGET'S}", target.possessive)
-    action_string = action_string.replace("{ACTOR'S}", actor.possessive)
-    action_string = action_string.replace("{TARGET_HIM}", target.him)
-    action_string = action_string.replace("{ACTOR_HIM}", actor.him)
-    action_string = action_string.replace("{ANTAGONIST_HER}", target.him)
-    action_string = action_string.replace("{ANTAGONIST_HIM}", target.him)
-    action_string = action_string.replace("{TARGET_HER}", target.him)
-    action_string = action_string.replace("{ACTOR_HER}", actor.him)
-    action_string = action_string.replace("{ANTAGONIST_SELF}", target.herself)
-    action_string = action_string.replace("{TARGET_SELF}", target.herself)
-    action_string = action_string.replace("{ACTOR_SELF}", actor.herself)
-    # TODO: replace the following with actual lookups
-    action_string = action_string.replace("{ACTOR_ATTRIBUTE}", "skill")
-    action_string = action_string.replace("{ANTAGONIST_ATTRIBUTE}", "strength")
-    action_string = action_string.replace("{ACTOR_WEAPON_SOUND}", "clank")
-    action_string = action_string.replace("{ANTAGONIST_ARMOR}", "leather cap")
+    ttable = buildTranslationTable(actor, target)
+    if not ttable is None:
+        for trans in ttable:
+            if not trans[1] is None:
+                action_string = action_string.replace(trans[0], trans[1])
+    
     # TODO: add lookups for ships and crew
     return action_string
 
@@ -74,6 +89,10 @@ class ActionProcessor:
         self.queue = collections.deque()
         self._uuid = uuid.uuid4()
         self._parent = None
+        self._initial_state = []
+        
+    def setInitialState(self, state):
+        self._initial_state = state # TODO: include actor/target/character states
         
     def addAction(self, act):
         self.queue.append(act)
@@ -98,6 +117,8 @@ class ActionProcessor:
         Runs the effects in the queue, returning the current collection of tags
         """
         effect_bag = collections.Counter()
+        if self._initial_state:
+            effect_bag.update(self._initial_state)
         for act in self.queue:
             if not act is None:
                 if Cmd.effects in act:
@@ -113,8 +134,18 @@ class ActionProcessor:
                 
         return effect_bag
         
-    def executeCommand(self):
-        return # TODO
+    def executeCommand(self, command):
+        command(weakref.ref(self))
+        return # TODO: test to make sure this works as intended
+        
+    def sendToParentConflict(self, act):
+        """
+        Attempts to send the message to whichever conflict is a parent to
+        the current conflict.
+        """
+        upper_parent = self.parent()._parent_conflict
+        if upper_parent:
+            upper_parent().addResolution(act)
     
     def currentTranscript(self):
         transcript = []
@@ -125,8 +156,12 @@ class ActionProcessor:
                 
 
 def expandTag(tag, actor, target):
-    tag = tag.replace("{ACTOR}", actor.id)
-    tag = tag.replace("{TARGET}", target.id)
+    if(isinstance(actor, int)):
+        print(actor)
+    if(isinstance(target, int)):
+        print(target)
+    tag = tag.replace("{ACTOR}", actor.getId())
+    tag = tag.replace("{TARGET}", target.getId())
     tag = tag.replace("{ACTOR SHIP}", actor.ship_id)
     tag = tag.replace("{TARGET SHIP}", target.ship_id)
     return tag
@@ -135,27 +170,52 @@ def expandTagFromState(tag, state):
     return expandTag(tag, state["actor"], state["target"])
 
 def expandTagFromAction(tag, state):
+    if state is None:
+        return tag
     return expandTag(tag, state["action"][Cmd.current_actor], state["action"][Cmd.current_target])    
                
 class Conflict:
-    def __init__(self, action_catalog, protagonist, antagonist):
+    def __init__(self, action_catalog, protagonist, antagonist, initial_state = None):
         self._sub_conflicts = []
         self._parent_conflict = None
         self.char_one = protagonist#Character("Robin Hood")
         self.char_two = antagonist#Character("Sir Galahad")
         self.action_processor = ActionProcessor()
         self.action_processor.parent = self
+        self.action_processor.setInitialState(initial_state)
         self.deck_of_actions = action_catalog
         #self.current_state = []
         self.actions_last_time = []
         for act in self.deck_of_actions:
             act.update({Cmd.last_time: 0.0})
+        self._resolved = False
+        #self._resolution_action = None
+            
+    def setInitialState(self, state):
+        self.action_processor.setInitialState(state)
         
+    @property
+    def resolved(self):
+        return self._resolved
+        
+    @resolved.setter
+    def resolved(self, val):
+        self._resolved = val
         
     def performAction(self, actor, target, action):
         action.update({Cmd.current_actor: actor, Cmd.current_target: target})
         print(action)
         self.action_processor.addAction(action)
+        
+    def addResolution(self, action):
+        print(action)
+        self.action_processor.addAction(action)
+        
+    def currentParentState(self):
+        if self._parent_conflict is None:
+            return self.currentState()
+        return self._parent_conflict().currentParentState()
+        
         
     def currentState(self):
         return self.currentTotalState()
@@ -184,7 +244,7 @@ class Conflict:
     def prereqCheck(self, action, actor, target):
         if Cmd.prereq in action:
             for pre in action[Cmd.prereq]:
-                if not pre({"conflict":self, "actor": actor, "target": target}):
+                if not pre({"conflict":weakref.ref(self), "actor": actor, "target": target}):
                     return False
         return True
         
@@ -212,7 +272,10 @@ class Conflict:
 
     def unhideActions(self):
         for idx, act in enumerate(self.deck_of_actions):
-            act[Cmd.last_time] = act[Cmd.last_time] * 0.99
+            last_time = act.get(Cmd.last_time)
+            if last_time is None:
+                last_time = 0.0
+            act[Cmd.last_time] = last_time * 0.999
             self.deck_of_actions[idx] = act
         
         
@@ -231,18 +294,58 @@ class Conflict:
         self.hideAction(next_action) # this action has been spent. 
         # Remove it from consideration until later...
         
-    def spawnSubconflict(conf):
-        return # TODO
+    def performChildActions(self):
+        if len(self._sub_conflicts) <= 0:
+            return False
+        for sc in self._sub_conflicts:
+            if sc.resolved:
+                self.resolveChild(sc)
+            else:
+                sc.performActions()
+        self._sub_conflicts = [sc for sc in self._sub_conflicts if (not sc.resolved)]
+        return True
         
-def efx_resolve_conflict(state):
+    def resolveChild(self, child_conflict):
+        for act in child_conflict.resolution_action:
+            self.performAction(act.get(Cmd.current_actor), act.get(Cmd.current_target), act)
+        
+            
+        
+    def performActions(self):
+        if self.performChildActions():
+            return # Only update this conflict once the subconflict has been resolved...
+        self.performNextAction(0)
+        self.performNextAction(1)
+            
+        
+    def spawnSubconflict(self, conf):
+        """
+        Given a Conflict, add it to this conflict as a subconflict
+        """
+        conf._parent_conflict = weakref.ref(self)
+        self._sub_conflicts.append(conf)
+
+def getCurState(state):
+    return state["conflict"]().currentParentState()
+
+        
+#def efx_resolve_conflict(state):
+#    """
+#    When the conflict is finished, finalize the results by propagating the
+#    important state changes up to the parent conflict.
+#    """
+#    effects = state["tags"]
+#    # TODO: implement conflict resolution
+#    return effects
+    
+def cmd_efx_resolve_conflict(actproc):
     """
     When the conflict is finished, finalize the results by propagating the
     important state changes up to the parent conflict.
     """
-    effects = state["tags"]
-    # TODO: implement conflict resolution
-    return effects
-        
+    #actproc().parent().addTags(tags)
+    actproc().parent().resolved = True
+    return        
         
 def Fight(conflict):
     conflict.performNextAction(0)
@@ -257,13 +360,18 @@ def Fight(conflict):
     return
 
 def WeighAnchor(conflict):
-    conflict.performNextAction(0)
+    conflict.performActions()
     print(conflict.currentState())
     print("===")
     
+def is_ship(state):
+    return state["actor"].isShip()
+    
+def is_sea(state):
+    return state["actor"].isSea()
         
 def in_combat(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     if (expandTagFromState("end combat {ACTOR}", state) in cur_tags):
         return False
     if (expandTagFromState("begin combat {ACTOR}", state) in cur_tags):
@@ -271,15 +379,15 @@ def in_combat(state):
     return (expandTagFromState("in combat {ACTOR}", state) in cur_tags)
     
 def not_in_combat(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     return not (expandTagFromState("in combat {ACTOR}", state) in cur_tags)
 
 def if_end_combat(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     return (expandTagFromState("end combat {ACTOR}", state) in cur_tags)
     
 def not_end_combat(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = state["conflict"]().currentState()
     return not (expandTagFromState("end combat {ACTOR}", state) in cur_tags)
 
 def can_proact(state):
@@ -301,7 +409,7 @@ def can_attack(state):
     return can_proact(state)
 
 def incoming_attack(state): # AKA "should parry", a necessary but not complete componet of "can parry"
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     if not in_combat(state):
         return False
     return (expandTagFromState("attacking {ACTOR}", state) in cur_tags)
@@ -314,7 +422,7 @@ def can_parry(state):
     return True
     
 def is_tag_count_positive(tag, state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     if (expandTagFromState(tag, state) in cur_tags):
         return cur_tags[expandTagFromState(tag, state)] > 0
 
@@ -363,20 +471,20 @@ def target_vulnerable(state):
     return False
    
 def target_broken_weapon(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     return (expandTagFromState("broken weapon {TARGET}", state) in cur_tags)
     return False
 
 def actor_broken_weapon(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     return (expandTagFromState("broken weapon {ACTOR}", state) in cur_tags)
     return False
-    
+   
 def respond_actor_broken_weapon(state):
     """
     Respond actions happen as immidiate priority responses...
     """
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     for tag in cur_tags:
         if ("signal broken weapon" in tag):
             return actor_broken_weapon(state)
@@ -386,7 +494,7 @@ def respond_start_combat(state):
     """
     Respond actions happen as immidiate priority responses...
     """
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     for tag in cur_tags:
         if "signal start combat" in tag:
             return not_in_combat(state)
@@ -418,7 +526,8 @@ def efx_signal_dropped_weapon(state):
     
 def efx_begin_combat(state):
     effects = state["tags"]
-    effects.update(["in combat"])
+    effects.update([expandTagFromAction("in combat {ACTOR}", state)])
+    effects.update([expandTagFromAction("in combat {TARGET}", state)])
     effects.update([expandTagFromAction("has weapon {ACTOR}", state)])
     effects.update([expandTagFromAction("has weapon {TARGET}", state)])
     return effects
@@ -525,14 +634,14 @@ def efx_clear_signal_broken_weapon(state):
 
 swordfight_actcat = [
 {Cmd.prereq: [not_in_combat, not_end_combat], Cmd.effects: [efx_signal_start_combat], Cmd.action: "{BEGIN: MELEE COMBAT}"},
-{Cmd.prereq: [not_in_combat, if_end_combat], Cmd.effects: [efx_resolve_conflict], Cmd.action: "{END: MELEE COMBAT}"},
+{Cmd.prereq: [not_in_combat, if_end_combat], Cmd.effects: [], Cmd.command: [cmd_efx_resolve_conflict], Cmd.action: "{END: MELEE COMBAT}"},
 #Begin
-{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "In a moment {ACTOR} stepped quickly {UPON THE PLACE} where {ANTAGONIST} stood."},
-{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "At last {ACTOR} struck like a flash, and--\"rap!\"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow; and so this mighty battle began."},
-{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Then {ACTOR} spat upon {ACTOR'S} hands and, grasping {ACTOR'S} {ACTOR_WEAPON}, came straight at the other."},
-{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "{ACTOR} gripped {ACTOR'S} {ACTOR_WEAPON} and threw {ACTOR_SELF} upon {ACTOR'S} guard."},
-{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "{ACTOR} said nothing at first but stood looking at {ANTAGONIST} with a grim face."},
-{Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Whatever {ACTOR} thought, {ACTOR} stood {ACTOR'S} ground, and now {ACTOR} and {ANTAGONIST} stood face to face."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "In a moment {ACTOR} stepped quickly {UPON THE PLACE} where {ANTAGONIST} stood."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "At last {ACTOR} struck like a flash, and--\"rap!\"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow; and so this mighty battle began."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Then {ACTOR} spat upon {ACTOR'S} hands and, grasping {ACTOR'S} {ACTOR_WEAPON}, came straight at the other."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "{ACTOR} gripped {ACTOR'S} {ACTOR_WEAPON} and threw {ACTOR_SELF} upon {ACTOR'S} guard."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "{ACTOR} said nothing at first but stood looking at {ANTAGONIST} with a grim face."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Whatever {ACTOR} thought, {ACTOR} stood {ACTOR'S} ground, and now {ACTOR} and {ANTAGONIST} stood face to face."},
 # Start Attack
 {Cmd.prereq: [can_attack], Cmd.effects: [efx_attack_target], Cmd.action: "{PAR}{ACTOR} made a feint, and then delivered a blow at {ANTAGONIST} that, had it met its mark, would have tumbled {ANTAGONIST} speedily."},
 {Cmd.prereq: [can_attack], Cmd.effects: [efx_attack_target], Cmd.action: "{PAR}At last {ACTOR} saw {ACTOR'S} chance, and, throwing all the strength {ACTOR} felt going from {ACTOR_HIM} into one blow that might have felled an ox, {ACTOR} struck at {ANTAGONIST} with might and main."},
@@ -583,7 +692,7 @@ swordfight_actcat = [
 ]
 
 def respond_start_weigh_anchor(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     search_tag = expandTagFromState("signal start weigh anchor {ACTOR SHIP}", state)
     for tag in cur_tags:
         if search_tag in tag:
@@ -591,7 +700,7 @@ def respond_start_weigh_anchor(state):
     return False
 
 def respond_prepare_capstan(state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     search_tag = expandTagFromState("signal prepare capstan {ACTOR SHIP}", state)
     for tag in cur_tags:
         if search_tag in tag:
@@ -638,12 +747,12 @@ def not_anchor_struggle(state):
     return not is_tag_count_positive("anchor struggle {ACTOR SHIP}", state)
     
 def is_tag_count_greater_than(tag, than, state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     if (expandTagFromState(tag, state) in cur_tags):
         return cur_tags[expandTagFromState(tag, state)] > than
 
 def is_tag_count_less_than(tag, than, state):
-    cur_tags = state["conflict"].currentState()
+    cur_tags = getCurState(state)
     #if (expandTagFromState(tag, state) in cur_tags):
     return cur_tags[expandTagFromState(tag, state)] < than
                         
@@ -661,6 +770,7 @@ def if_anchor_at_up_and_down(state):
 
 def if_anchor_at_anchor_aweigh(state):
     return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 2, state)
+    
     
 
 def efx_signal_start_weigh_anchor(state):
@@ -702,47 +812,59 @@ def efx_end_weigh_anchor(state):
     effects[expandTagFromAction("weighing anchor end {ACTOR SHIP}", state)] = 1
     effects = efx_clear_signal(state, expandTagFromAction("weighing anchor {ACTOR SHIP}", state))
     return effects
+
+def cmd_efx_anchor_aweigh(actproc):
+    charone = actproc().parent().char_one
+    chartwo = actproc().parent().char_two
+    act = {Cmd.effects: [lambda state: state["tags"] + collections.Counter([expandTag("anchor aweigh {ACTOR SHIP}", charone, chartwo)])]}
+    actproc().sendToParentConflict(act)
+
     
 # Crew vs Anchor
 weigh_anchor_actcat = [
 #Temp: an order to jumpstart the conflict
-{Cmd.prereq: [not_weighing_anchor, not_weighing_anchor_end, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
-{Cmd.prereq: [not_weighing_anchor, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
-{Cmd.prereq: [if_weighing_anchor_end, not_weighing_anchor, if_anchor_aweigh], Cmd.effects: [efx_resolve_conflict], Cmd.action: "{END: WEIGH ANCHOR}"},
+{Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
+{Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
+{Cmd.prereq: [is_ship, if_weighing_anchor_end, not_weighing_anchor, if_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_anchor_aweigh, cmd_efx_resolve_conflict], Cmd.action: "{END: WEIGH ANCHOR}"},
 # clear the deck, make ready
-{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
-{Cmd.prereq: [respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The order was given, and soon the messenger was run out and the capstan manned."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The order was given, and soon the messenger was run out and the capstan manned."},
 # capstan bars fitted to capstan
-{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} fitted the bars, and the #sailors# took their positions around the capstan."},
-{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
-{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "\"Take your positions, you #sailors#,\" said {THE BOATSWAIN}."},
-{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "There came soon the familiar racket of making sail and trimming yards and the clank of the capstan pawls. "},
-{Cmd.prereq: [respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} fitted the bars, and the #sailors# took their positions around the capstan."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "\"Take your positions, you #sailors#,\" said {THE BOATSWAIN}."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "There came soon the familiar racket of making sail and trimming yards and the clank of the capstan pawls. "},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
 #pulling at the capstan
-{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained."},
-{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "\"That's your sort, my hearties,\" exclaimed {THE BOATSWAIN} encouragingly, as {THE BOATSWAIN} applied {THE BOATSWAIN'S} tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!"},
-{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# strained at the bars, the pawl clicking as they drove the capstan round."},
-{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The chorus of the shanty kept time with the clicks of the pawl."},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained."},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "\"That's your sort, my hearties,\" exclaimed {THE BOATSWAIN} encouragingly, as {THE BOATSWAIN} applied {THE BOATSWAIN'S} tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!"},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# strained at the bars, the pawl clicking as they drove the capstan round."},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The chorus of the shanty kept time with the clicks of the pawl."},
 #sing a shanty
-{Cmd.prereq: [if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: ["As the #sailors# turned the capstan, {THE BOATSWAIN} took up the verse and the crew repeated the chorus: {SHANTY}", "The crew sang in time with their work: {SHANTY}", "As was their practice, they sang to maintain the rhythm. {SHANTY}"]},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: ["As the #sailors# turned the capstan, {THE BOATSWAIN} took up the verse and the crew repeated the chorus: {SHANTY}", "The crew sang in time with their work: {SHANTY}", "As was their practice, they sang to maintain the rhythm. {SHANTY}"]},
 # straining, it goes slowly...
-{Cmd.prereq: [if_turning_capstan, if_anchor_struggle], Cmd.effects: [], Cmd.action: ["The anchor held fast, drawing line tighter and pulling the ship closer.", "The #sailors# strained against the wheel of the capstan, each rachet of the pawl a hard won fight."]},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_anchor_struggle], Cmd.effects: [], Cmd.action: ["The anchor held fast, drawing line tighter and pulling the ship closer.", "The #sailors# strained against the wheel of the capstan, each rachet of the pawl a hard won fight."]},
 # call out: at long stay / at short stay, up and down, anchors aweigh
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_long_stay#"},
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_short_stay#"},
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_up_and_down#"},
-{Cmd.prereq: [if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_aweigh#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_long_stay#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_short_stay#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_up_and_down#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_aweigh#"},
 # catting the anchor
-{Cmd.prereq: [if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor], Cmd.effects: [efx_end_weigh_anchor, efx_resolve_conflict], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
+{Cmd.prereq: [is_ship, if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor, not_weighing_anchor_end], Cmd.effects: [efx_end_weigh_anchor], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
 ]
 
 def cmd_efx_weigh_anchor(actproc):
-    subconflict = Conflict()
-    actproc.parent.spawnSubconflict(subconflict)
+    actor = actproc().parent().char_one
+    target = actproc().parent().char_two
+    subconflict = Conflict(weigh_anchor_actcat, actor, target, [expandTag("weighing anchor {ACTOR SHIP}", actor, target), expandTag("begin weighing anchor {ACTOR SHIP}", actor, target)])
+    actproc().parent().spawnSubconflict(subconflict)
     return # TODO
 
 # Voyage: Ship vs. the Sea
-ship_voyage = []
+actcat_ship_voyage = [
+# Weigh Anchor
+{Cmd.prereq: [is_ship, not_weighing_anchor_end, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "{VOYAGE: WEIGH ANCHOR}"}               
+               ]
 
 ship_leave_port = []
 

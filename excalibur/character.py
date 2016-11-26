@@ -6,7 +6,7 @@ from uuid import uuid4
 
 class Character:
     def __init__(self, char_name, char_gender="female"):
-        self._id = char_name.upper().replace(" ", "_")
+        self._id = char_name.upper().replace(" ", "_").replace("\"", "_").replace("\'", "_")
         self._full_name = char_name
         self._nickname = ""
         self._given_name = char_name
@@ -15,12 +15,18 @@ class Character:
         self._gender = char_gender
         self._crew_title = ""
         self._ship_id = ""
+        self._weapon_name = ""
+        self._weapon_tags = []
+        self._character_tags = []
         self._uuid = uuid4()
     
+    def getId(self):
+        return self._id
+        
     @property
     def id(self):
-        return str.upper(self._id).replace(" ", "_")
-        
+        return self._id
+                
     @property
     def ship_id(self):
         return self._ship_id
@@ -31,11 +37,11 @@ class Character:
         
     @property
     def name(self):
-        return self._id
+        return self._full_name
     
     @name.setter
     def name(self, value):
-        self._id = value
+        self._full_name = value
         
     @property
     def gender(self):
@@ -57,7 +63,7 @@ class Character:
         
     @property
     def possessive(self):
-        return str(self._id) + "'s"
+        return str(self._full_name) + "'s"
         
     @property
     def weapon_name(self):
@@ -78,6 +84,17 @@ class Character:
     def Display(self):
         print("{0}, {1}, who carries a {2}".format(self._full_name, self._crew_title, self._weapon_name))
         
+    def isShip(self):
+        return "ship" in self._character_tags
+    
+    def isCrew(self):
+        return "crew" in self._character_tags
+        
+    def isSea(self):
+        return "sea" in self._character_tags
+        
+    def addTag(self, tag):
+        self._character_tags.append(tag)
 
         
     # Pronoun Object
@@ -89,6 +106,8 @@ class Character:
             return "us"
         if self.gender is "third_plural":
             return "them"
+        if self.gender is "neuter":
+            return "it"
         if self.gender is "first":
             return "me"
         return "him"
@@ -102,6 +121,8 @@ class Character:
             return "ours"
         if self.gender is "third_plural":
             return "theirs"
+        if self.gender is "neuter":
+            return "its"
         if self.gender is "first":
             return "mine"
         return "his"
@@ -115,6 +136,8 @@ class Character:
             return "we"
         if self.gender is "third_plural":
             return "they"
+        if self.gender is "neuter":
+            return "it"
         if self.gender is "first":
             return "I"
         return "he"
@@ -128,6 +151,8 @@ class Character:
             return "our"
         if self.gender is "third_plural":
             return "their"
+        if self.gender is "neuter":
+            return "its"
         if self.gender is "first":
             return "my"
         return "his"
@@ -141,6 +166,8 @@ class Character:
             return "ourselves"
         if self.gender is "third_plural":
             return "themselves"
+        if self.gender is "neuter":
+            return "itself"
         if self.gender is "first":
             return "myself"
         return "himself"
@@ -151,6 +178,9 @@ class Crew(Character):
         self._gender = "third_plural"
         self._gang = []
         
+    def getId(self):
+        return self._crew_id
+        
     def addCrew(self, crew_member):
         self._gang.append(crew_member)
         
@@ -160,7 +190,9 @@ class Crew(Character):
     
 class Ship(Character):
     def __init__(self, ship_name, ship_characteristics):
-        self._ship_id = ship_name.upper().replace(" ", "_")
+        super(Ship, self).__init__(ship_name, "ship")
+        self._id = uuid4()
+        self._ship_id = ship_name.upper().replace(" ", "_").replace("\"", "_").replace("\'", "_")
         self._ship_type = ship_characteristics["type"]
         self._crew_complement = ship_characteristics["crew complement"]
         self._tonnage = ship_characteristics["tonnage"]
@@ -175,6 +207,13 @@ class Ship(Character):
         self._family_name = ship_name
         self._name_style = "ship_name"
         self._gender = "ship"
+        
+    def getId(self):
+        return self._ship_id
+
+    @property
+    def id(self):
+        return self._ship_id
         
     @property
     def ship_id(self):
@@ -310,7 +349,7 @@ melee_weapons_swords=["sword","cutlass","rapier","khopesh","sabre","estoc","clay
         
 
 def generatePirate():
-    westeast = random.choice(["western_family_name","eastern_family_name"])
+    westeast = random.choice(["western_family_name","western_family_name","eastern_family_name"])
     gender = random.choice(["male","female"])
     name_gender = "{0}_given_names".format(gender)
     given_name = random.choice(pirate_name_rules[name_gender])
@@ -344,5 +383,10 @@ def generatePirateShip():
         pirate = generatePirate()
         pirate._crew_title = c_title
         pirate_ship.addCrew(pirate)
+    pirate_ship.addTag("ship")
     return pirate_ship
     
+def generateTheSea():
+    the_sea = Character("the sea", "neuter")
+    the_sea.addTag("sea")
+    return the_sea
