@@ -12,6 +12,7 @@ from character import generateTheSea
 import tracery
 import uuid
 import weakref
+import copy
 
 # For debugging...
 from IPython.utils import coloransi
@@ -24,6 +25,7 @@ class Cmd(Enum):
     prereq = 4
     effects = 5
     command = 6
+    transcript = 7
     last_time = 999
 
 def is_decay_in_efx(efx):
@@ -69,6 +71,9 @@ def translateActionDescription(action, specific_item = None):
     action_string = action.get(Cmd.action)
     if not (specific_item is None):
         action_string = specific_item
+    if hasattr(action_string, "get"):
+        if action_string.get(Cmd.transcript) != None:
+            return action_string # TODO: handle nested transcriptions
     if (not isinstance(action_string, str)) or (not (hasattr(action_string, "replace"))):
         if isinstance(action_string, collections.Iterable):
             for asi in action_string:
@@ -153,6 +158,12 @@ class ActionProcessor:
             if not act is None:
                 transcript.append(translateActionDescription(act))
         return transcript
+        
+    def emitTranscript(self):
+        charone = self.parent().char_one
+        chartwo = self.parent().char_two
+        return {Cmd.current_actor: copy.deepcopy(charone), Cmd.current_target: copy.deepcopy(chartwo), Cmd.transcript: copy.deepcopy(self.currentTranscript())}
+        
                 
 
 def expandTag(tag, actor, target):
@@ -167,8 +178,16 @@ def expandTag(tag, actor, target):
     return tag
     
 def expandTagFromState(tag, state):
+    """
+    Returns the text of the tag, with the proper variables 
+    filled in.
+    
+    If you get a KeyError, make sure that you're calling this
+    from a state-query, and NOT from an action. Action EFX
+    functions should use expandTagFromAction.
+    """
     return expandTag(tag, state["actor"], state["target"])
-
+    
 def expandTagFromAction(tag, state):
     if state is None:
         return tag
@@ -816,7 +835,9 @@ def efx_end_weigh_anchor(state):
 def cmd_efx_anchor_aweigh(actproc):
     charone = actproc().parent().char_one
     chartwo = actproc().parent().char_two
-    act = {Cmd.effects: [lambda state: state["tags"] + collections.Counter([expandTag("anchor aweigh {ACTOR SHIP}", charone, chartwo)])]}
+    transcript = actproc().emitTranscript()
+    act = {Cmd.effects: [lambda state: state["tags"] + collections.Counter([expandTag("anchor aweigh {ACTOR SHIP}", charone, chartwo)])],
+           Cmd.action: transcript }
     actproc().sendToParentConflict(act)
 
     
@@ -860,11 +881,117 @@ def cmd_efx_weigh_anchor(actproc):
     actproc().parent().spawnSubconflict(subconflict)
     return # TODO
 
+def if_no_destination(state):
+    cur_tags = getCurState(state)
+    #print(cur_tags)
+    finddest = expandTagFromState("destination {ACTOR}", state)
+    curdest = None
+    for tag in cur_tags:
+        if finddest in tag:
+            curdest = tag
+    #print (curdest)
+    #print((None == curdest))
+    return (None == curdest)
+    
+def if_at_destination(state):
+    cur_tags = getCurState(state)
+    findloc = expandTagFromState("location {ACTOR}", state)
+    finddest = expandTagFromState("destination {ACTOR}", state)
+    curloc = None
+    curdest = None
+    for tag in cur_tags:
+        if findloc in tag:
+            curloc = tag
+        if finddest in tag:
+            curdest = tag
+    if (None == curdest) or (None == curloc):
+        return False    
+    return (curdest.split(":",maxsplit=1)[1] == curloc.split(":",maxsplit=1)[1])
+    
+def not_at_destination(state):
+    return not (if_at_destination(state))
+    
+def if_destination_overseas(state):
+    return True # TODO: sometimes destinations can be on this island
+    
+def if_voyaging(state):
+    return is_tag_count_positive("voyaging {ACTOR SHIP}", state)
+    
+def if_in_harbor(state):
+    return is_tag_count_positive("in harbor {ACTOR SHIP}", state)
+
+def not_in_harbor(state):
+    return not is_tag_count_positive("in harbor {ACTOR SHIP}", state)
+    
+def efx_voyage_begins(state):
+    effects = state["tags"]
+    # TODO: change these temporary tag injections to reflect the actual current state of the ship
+    effects = effects + collections.Counter([expandTagFromAction("destination {ACTOR SHIP}: NOMANISAN ISLAND", state)])
+    effects = effects + collections.Counter([expandTagFromAction("in harbor {ACTOR SHIP}", state)])
+    effects = effects + collections.Counter([expandTagFromAction("voyaging {ACTOR SHIP}", state)])
+    return effects         
+
+def efx_leave_harbor(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("in harbor {ACTOR SHIP}", state)] = 0
+    return effects
+    
+def efx_voyage_ends(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("voyaging {ACTOR SHIP}", state)] = 0
+    return effects
+    
+def efx_drop_anchor(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("anchor aweigh {ACTOR SHIP}", state)] = 0
+    return effects
+    
+def efx_enter_harbor(state):
+    return state["tags"] + collections.Counter([expandTagFromAction("in harbor {ACTOR SHIP}", state)])
+    
+def efx_move_location_destination(state):
+    """
+    Destinations are specified by tags formatted as 
+    "destination {ACTOR}: place_id". Locations use a similar
+    format. This swaps them out.
+    """
+    effects = state["tags"]
+    findloc = expandTagFromAction("location {ACTOR}", state)
+    finddest = expandTagFromAction("destination {ACTOR}", state)
+    curdest = None
+    curloc = None
+    for tag in effects:
+        if findloc in tag:
+            curloc = tag
+        if finddest in tag:
+            curdest = tag
+    if not curdest is None:
+        if not curloc is None:
+            effects[curloc] = 0
+        newloc = curdest.split(":",maxsplit=1)[1]
+        effects.update(["{0}:{1}".format(expandTagFromAction("location {ACTOR}", state), newloc)])
+    return effects
+    
 # Voyage: Ship vs. the Sea
 actcat_ship_voyage = [
+{Cmd.prereq: [is_ship, if_no_destination], Cmd.effects: [efx_voyage_begins], Cmd.action: "{TEMP: RANDOM DESTINATION}"},
+# Start the voyage
+{Cmd.prereq: [is_ship, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "{VOYAGE: BEGIN_VOYAGE}"},
 # Weigh Anchor
-{Cmd.prereq: [is_ship, not_weighing_anchor_end, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "{VOYAGE: WEIGH ANCHOR}"}               
-               ]
+{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "{VOYAGE: WEIGH ANCHOR}"},
+# Leave the harbor
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "{VOYAGE: LEAVE HARBOR}"},
+# Sailing
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [efx_move_location_destination], Cmd.action: "{VOYAGE: SAILING}"},
+# Perilous Journey
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "{VOYAGE: PERILS AT SEA}"},
+# Arrive at destination, enter harbor
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "{VOYAGE: ENTER HARBOR}"},
+# Drop anchor
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_drop_anchor], Cmd.action: "{VOYAGE: DROP ANCHOR}"},
+ # Voyage over
+{Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "{VOYAGE: END}"}
+ ]
 
 ship_leave_port = []
 
