@@ -5404,7 +5404,7 @@ def loadCorpus(filename):
 #loadPyle()
 
 def activateCorpus():
-    loadCorpusFromText(loadSelectedTextsPublicDomain(6000))
-    saveCorpus("sixk")
+    loadCorpusFromText(loadSelectedTextsPublicDomain(3000))
+    saveCorpus("threek")
     actionsFromCurrentCorpus()
-    saveCorpus("sixk")
+    saveCorpus("threek")

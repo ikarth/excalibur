@@ -24,7 +24,7 @@ from gutenberg.acquire import get_metadata_cache
 # I always favor implementing the specific uses first and wait to do the 
 # architecture until you know what it actually needs to look like.
 
-recache_stripped_files = True
+recache_stripped_files = False
 
 if not 'cache' in globals():
     #cache = gutenberg.acquire.metadata.SqliteMetadataCache('./data/gutenberg/metadata/cache_sqlite')

@@ -260,6 +260,9 @@ class Conflict:
     def currentTranscript(self):
         return self.action_processor.currentTranscript()
         
+    def outputTranscript(self):
+        return self.action_processor.emitTranscript()
+        
     def prereqCheck(self, action, actor, target):
         if Cmd.prereq in action:
             for pre in action[Cmd.prereq]:
@@ -858,7 +861,7 @@ weigh_anchor_actcat = [
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
 #pulling at the capstan
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained."},
-{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "\"That's your sort, my hearties,\" exclaimed {THE BOATSWAIN} encouragingly, as {THE BOATSWAIN} applied {THE BOATSWAIN'S} tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!"},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}\"That's your sort, my hearties,\" exclaimed {THE BOATSWAIN} encouragingly, as {THE BOATSWAIN} applied {THE BOATSWAIN'S} tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!\""},
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# strained at the bars, the pawl clicking as they drove the capstan round."},
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The chorus of the shanty kept time with the clicks of the pawl."},
 #sing a shanty
@@ -869,7 +872,7 @@ weigh_anchor_actcat = [
 {Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_long_stay#"},
 {Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_short_stay#"},
 {Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_up_and_down#"},
-{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_aweigh#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_anchors_aweigh#"},
 # catting the anchor
 {Cmd.prereq: [is_ship, if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor, not_weighing_anchor_end], Cmd.effects: [efx_end_weigh_anchor], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
 ]
@@ -993,13 +996,16 @@ actcat_ship_voyage = [
 {Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "{VOYAGE: END}"}
  ]
 
-ship_leave_port = []
+actcat_ship_leave_port = []
 
-ship_grounded = [
+actcat_ship_grounded = [
 #{Cmd.prereq: [respond_start_pull_off], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}With the anchor secured, the messenger was run out and the capstan manned."},                 
 ]
 
 
+actcat_pirate_book = [
+{Cmd.prereq: [], Cmd.command: [], Cmd.action: "The Voyages of {THE_CAPTAIN}, aboard #ship_name#"}
+]
 
 
 postprocessing_table = {

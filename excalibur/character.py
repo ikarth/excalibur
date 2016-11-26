@@ -95,6 +95,9 @@ class Character:
         
     def addTag(self, tag):
         self._character_tags.append(tag)
+    
+    def getTags(self):
+        return self._character_tags
 
         
     # Pronoun Object
@@ -184,6 +187,9 @@ class Crew(Character):
     def addCrew(self, crew_member):
         self._gang.append(crew_member)
         
+    def getCrew(self):
+        return self._gang
+        
     def Display(self):
         for c in self._gang:
             c.Display()
@@ -230,6 +236,35 @@ class Ship(Character):
     def addCrew(self,crew_member):
         crew_member.ship_id = self._ship_id
         self._crew.addCrew(crew_member)
+        
+    def findInCrew(self, crewtag):
+        result = None
+        for c in self._crew.getCrew():
+            if crewtag in c._crew_title:
+                result = c
+        return result
+        
+    def getCaptain(self):
+        swaim = self.findInCrew("captain")
+        return swaim
+        
+    def getBoatswain(self):
+        swain = self.findInCrew("boatswain")
+        if None == swain:
+            swain = self.findInCrew("pilot")
+        if None == swain:
+            swain = self.findInCrew("first mate")
+        if None == swain:
+            swain = self.findInCrew("navigator")
+        if None == swain:
+            swain = self.findInCrew("second mate")
+        if None == swain:
+            swain = self.findInCrew("captain")
+        return swain
+        
+    def getRandomCrewmember(self):
+        return random.choice(self._crew.getCrew())
+            
         
     
 ship_templates = [
@@ -390,3 +425,34 @@ def generateTheSea():
     the_sea = Character("the sea", "neuter")
     the_sea.addTag("sea")
     return the_sea
+    
+    
+def find_character(char, actor, target):
+    """
+    Find the specified character in the actor/target subgroupings.
+    Used to, for example, return the captain of a ship if we
+    know which ship but not which character is the captain.
+    """
+    if "CREWMEMBER" in char:
+        if "ship" in actor.getTags():
+            c = actor.getRandomCrewmember()
+            if None != c:
+                return c
+    if "THE BOATSWAIN" in char:
+        if "ship" in actor.getTags():
+            c = actor.getBoatswain()
+            if None != c:
+                return c
+    return char
+    
+def find_character_name(char, actor, target):
+    c = find_character(char, actor, target)
+    if hasattr(c, "name"):
+        return c.name
+    return c
+    
+def find_character_name_pos_adj(char, actor, target):
+    c = find_character(char, actor, target)
+    if hasattr(c, "her"):
+        return c.her
+    return c

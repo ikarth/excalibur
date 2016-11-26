@@ -3,17 +3,18 @@
 import tracery
 from tracery.modifiers import base_english
 import random
+import numpy.random
 
-shanties = [{"chorus":"""
-   #verse#
-   #verse#
-   #verse#
-   Early in the morning?
-   Hooray and up she rises,
-   Hooray and up she rises,
-   Hooray and up she rises
-   Early in the morning.
-""",
+shanties = [{"chorus":"""  
+   #verse#  
+   #verse#  
+   #verse#  
+   Early in the morning?  
+   Hooray and up she rises,  
+   Hooray and up she rises,  
+   Hooray and up she rises  
+   Early in the morning.  
+   """,
 "verse": [
 "What shall we do with the drunken sailor,",
 "Put him in the long-boat until he's sober.",
@@ -21,30 +22,31 @@ shanties = [{"chorus":"""
 "Put him in the scuppers with a hose-pipe on him.",
 "Heave him by the leg in a running bowlin'.",
 "Tie him to the taffrail when she's yard-arm under."
-]},{"chorus":"""
-   #verse#
-   Storm along boys,
-   Storm along.
-   #verse#
-   Ah-ha, come along, get along,
-   Stormy along John.
-""",
+]},{"chorus":"""  
+   #verse#  
+   Storm along boys,  
+   Storm along.  
+   #verse#  
+   Ah-ha, come along, get along,  
+   Stormy along John.  
+   """,
 "verse":[
 "Oh poor old Stormy's dead and gone.",
 "I dug his grave with a silver spade.",
 "I lower'd him down with a golden chain.",
 "I carried him away to Mobile Bay.",
 "Oh poor old Stormy's dead and gone."]
-},{"chorus":"""
-   #verse#
-   Oh Rio.
-   #verse_2#
-   And we're bound for the Rio Grande.
-   Then away love, away,
-   'Way down Rio,
-   Sing fare you well my pretty young gal.
-   For we're bound for the Rio Grande.
-""","verse":[
+},{"chorus":"""  
+   #verse#  
+   Oh Rio.  
+   #verse_2#  
+   And we're bound for the Rio Grande.  
+   Then away love, away,  
+   'Way down Rio,  
+   Sing fare you well my pretty young gal.  
+   For we're bound for the Rio Grande.  
+   """,
+"verse":[
 "Oh Cap-tain, oh Cap-tain, heave yer ship to,",
 "I'll sing you a song of the fish of the sea.",
 "Sing good-bye to Sally, and good-bye to Sue,",
@@ -76,11 +78,14 @@ shanties = [{"chorus":"""
 "And soon we'll be ashore again.",
 "And it's oh to see you again my dear.",
 "We're homeward bound, and I hear the sound."],
-"chorus":"""#verse#
-   Good-bye, fare ye well,
-   Good-bye, fare ye well.
-   #verse_2#
-   Hooray my boys we're homeward bound."""}]
+"chorus":"""  
+   #verse#  
+   Good-bye, fare ye well,  
+   Good-bye, fare ye well.  
+   #verse_2#  
+   Hooray my boys we're homeward bound.  
+   
+   """}]
 
 def prepShanty(shanty):
     if not ("verse_2" in shanty):
@@ -143,6 +148,19 @@ def singShantyVerseCallAndResponse(shanty, verseno):
             #    line_two = ""
         idx += 1
     return output # TODO
+
+def singShantySubset(shanty):
+    verses = len(shanty["verse"])
+    singing_verses = numpy.random.choice(range(verses), size=numpy.random.randint(0, verses),replace=False)
+    output = "\n"
+    output += singShantyVerse(shanty, 0)
+    for v in singing_verses:
+        output += singShantyVerse(shanty, v)
+    return output
+    
+def singShanty(char, actor, target):
+    return singShantySubset(random.choice(shanties))
+    
     
 print(singShantyVerse(shanties[0], 0))
 print(singCompleteShanty(shanties[1]))
