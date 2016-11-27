@@ -65,6 +65,8 @@ def indexCommands(text):
     return command_indexes
 
 command_table = {
+"<PAR><PAR>": lambda c, a, t: "\n\n",
+"<PAR> <PAR>": lambda c, a, t: "\n\n",
 "<PAR>": lambda c, a, t: "\n\n",
 "<THE BOATSWAIN>": character.find_character_name,
 "<CREWMEMBER>": character.find_character_name,

@@ -1000,10 +1000,12 @@ actcat_ship_voyage = [
  ]
 
 actcat_ship_leave_port = []
+#The anchor catted, and the mainsail unfurled, they stood out for the open before a gentle breeze, without interference from the fort.
 
 actcat_ship_grounded = [
 #{Cmd.prereq: [respond_start_pull_off], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>With the anchor secured, the messenger was run out and the capstan manned."},                 
 ]
+#The men strained at the bars until it seemed as though they would burst their very sinews; another reluctant click or two of the pawl showed that something was at length yielding; and then, first with a slow jerky motion which quickened rapidly, and ended in a mighty surge as the men drove the capstan irresistibly round, the bows of the schooner swerved to seaward, the vessel herself righted, hung for a moment, and then glided off the tail of the bank, finally swinging to her anchor, afloat once more.
 
 
 actcat_pirate_book = [
