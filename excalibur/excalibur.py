@@ -16,7 +16,7 @@ for i in range(30):
 script = con.outputTranscript()
 
 output = transcript.compileTranscript(script)
-output = transcript.makeTitlePageFromShip(script) + output
+output = transcript.makeTitlePageFromShip(script) + "\n" + output
 print("*************\n*   Story   *\n*************\n")
 print(output)
 book.makeBook(output)

@@ -36,29 +36,29 @@ def is_decay_in_efx(efx):
 
 def buildTranslationTable(actor, target):
     ttable = []
-    ("{ACTOR}", actor.name)
-    ttable.append(["{ANTAGONIST}", target.name])
-    ttable.append(["{ACTOR_WEAPON}", actor.weapon_name])
-    ttable.append(["{ANTAGONIST_WEAPON}", target.weapon_name])
-    ttable.append(["{TARGET_WEAPON}", target.weapon_name])
-    ttable.append(["{ANTAGONIST'S}", target.possessive])
-    ttable.append(["{TARGET}", target.name])
-    ttable.append(["{TARGET'S}", target.possessive])
-    ttable.append(["{ACTOR'S}", actor.possessive])
-    ttable.append(["{TARGET_HIM}", target.him])
-    ttable.append(["{ACTOR_HIM}", actor.him])
-    ttable.append(["{ANTAGONIST_HER}", target.him])
-    ttable.append(["{ANTAGONIST_HIM}", target.him])
-    ttable.append(["{TARGET_HER}", target.him])
-    ttable.append(["{ACTOR_HER}", actor.him])
-    ttable.append(["{ANTAGONIST_SELF}", target.herself])
-    ttable.append(["{TARGET_SELF}", target.herself])
-    ttable.append(["{ACTOR_SELF}", actor.herself])
+    ("<ACTOR>", actor.name)
+    ttable.append(["<ANTAGONIST>", target.name])
+    ttable.append(["<ACTOR_WEAPON>", actor.weapon_name])
+    ttable.append(["<ANTAGONIST_WEAPON>", target.weapon_name])
+    ttable.append(["<TARGET_WEAPON>", target.weapon_name])
+    ttable.append(["<ANTAGONIST'S>", target.possessive])
+    ttable.append(["<TARGET>", target.name])
+    ttable.append(["<TARGET'S>", target.possessive])
+    ttable.append(["<ACTOR'S>", actor.possessive])
+    ttable.append(["<TARGET_HIM>", target.him])
+    ttable.append(["<ACTOR_HIM>", actor.him])
+    ttable.append(["<ANTAGONIST_HER>", target.him])
+    ttable.append(["<ANTAGONIST_HIM>", target.him])
+    ttable.append(["<TARGET_HER>", target.him])
+    ttable.append(["<ACTOR_HER>", actor.him])
+    ttable.append(["<TARGET_SELF>", target.herself])
+    ttable.append(["<TARGET_SELF>", target.herself])
+    ttable.append(["<ACTOR_SELF>", actor.herself])
     # TODO: replace the following with actual lookups
-    ttable.append(["{ACTOR_ATTRIBUTE}", "skill"])
-    ttable.append(["{ANTAGONIST_ATTRIBUTE}", "strength"])
-    ttable.append(["{ACTOR_WEAPON_SOUND}", "clank"])
-    ttable.append(["{ANTAGONIST_ARMOR}", "leather cap"])
+    ttable.append(["<ACTOR_ATTRIBUTE>", "skill"])
+    ttable.append(["<TARGET_ATTRIBUTE>", "strength"])
+    ttable.append(["<ACTOR_WEAPON_SOUND>", "clank"])
+    ttable.append(["<ANTAGONIST_ARMOR>", "leather cap"])
         
     
 
@@ -171,9 +171,9 @@ def expandTag(tag, actor, target):
         print(actor)
     if(isinstance(target, int)):
         print(target)
-    tag = tag.replace("{ACTOR}", actor.getId())
-    tag = tag.replace("{TARGET}", target.getId())
-    tag = tag.replace("{ACTOR SHIP}", actor.ship_id)
+    tag = tag.replace("<ACTOR>", actor.getId())
+    tag = tag.replace("<TARGET>", target.getId())
+    tag = tag.replace("<ACTOR SHIP>", actor.ship_id)
     tag = tag.replace("{TARGET SHIP}", target.ship_id)
     return tag
     
@@ -394,23 +394,23 @@ def is_sea(state):
         
 def in_combat(state):
     cur_tags = getCurState(state)
-    if (expandTagFromState("end combat {ACTOR}", state) in cur_tags):
+    if (expandTagFromState("end combat <ACTOR>", state) in cur_tags):
         return False
-    if (expandTagFromState("begin combat {ACTOR}", state) in cur_tags):
+    if (expandTagFromState("begin combat <ACTOR>", state) in cur_tags):
         return False
-    return (expandTagFromState("in combat {ACTOR}", state) in cur_tags)
+    return (expandTagFromState("in combat <ACTOR>", state) in cur_tags)
     
 def not_in_combat(state):
     cur_tags = getCurState(state)
-    return not (expandTagFromState("in combat {ACTOR}", state) in cur_tags)
+    return not (expandTagFromState("in combat <ACTOR>", state) in cur_tags)
 
 def if_end_combat(state):
     cur_tags = getCurState(state)
-    return (expandTagFromState("end combat {ACTOR}", state) in cur_tags)
+    return (expandTagFromState("end combat <ACTOR>", state) in cur_tags)
     
 def not_end_combat(state):
     cur_tags = state["conflict"]().currentState()
-    return not (expandTagFromState("end combat {ACTOR}", state) in cur_tags)
+    return not (expandTagFromState("end combat <ACTOR>", state) in cur_tags)
 
 def can_proact(state):
     """
@@ -426,7 +426,7 @@ def can_proact(state):
     return True
     
 def can_attack(state):
-    if not is_tag_count_positive("has weapon {ACTOR}", state):
+    if not is_tag_count_positive("has weapon <ACTOR>", state):
         return False
     return can_proact(state)
 
@@ -434,7 +434,7 @@ def incoming_attack(state): # AKA "should parry", a necessary but not complete c
     cur_tags = getCurState(state)
     if not in_combat(state):
         return False
-    return (expandTagFromState("attacking {ACTOR}", state) in cur_tags)
+    return (expandTagFromState("attacking <ACTOR>", state) in cur_tags)
     
 def can_parry(state):
     if not incoming_attack(state):
@@ -449,28 +449,28 @@ def is_tag_count_positive(tag, state):
         return cur_tags[expandTagFromState(tag, state)] > 0
 
 def is_staggered_actor(state):
-    return is_tag_count_positive("staggered {ACTOR}", state)
+    return is_tag_count_positive("staggered <ACTOR>", state)
     
 def is_staggered_target(state):
-    return is_tag_count_positive("staggered {TARGET}", state)
+    return is_tag_count_positive("staggered <TARGET>", state)
 
 def is_wounded_actor(state):
-    return is_tag_count_positive("wounded {ACTOR}", state)
+    return is_tag_count_positive("wounded <ACTOR>", state)
     
 def is_wounded_target(state):
-    return is_tag_count_positive("wounded {TARGET}", state)
+    return is_tag_count_positive("wounded <TARGET>", state)
 
 def not_is_wounded_actor(state):
-    return not is_tag_count_positive("wounded {ACTOR}", state)
+    return not is_tag_count_positive("wounded <ACTOR>", state)
     
 def not_is_wounded_target(state):
-    return not is_tag_count_positive("wounded {TARGET}", state)
+    return not is_tag_count_positive("wounded <TARGET>", state)
         
 def is_fallen_actor(state):
-    return is_tag_count_positive("fallen {ACTOR}", state)
+    return is_tag_count_positive("fallen <ACTOR>", state)
     
 def is_fallen_target(state):
-    return is_tag_count_positive("fallen {TARGET}", state)
+    return is_tag_count_positive("fallen <TARGET>", state)
 
 def is_offbalance_actor(state):
     """
@@ -494,12 +494,12 @@ def target_vulnerable(state):
    
 def target_broken_weapon(state):
     cur_tags = getCurState(state)
-    return (expandTagFromState("broken weapon {TARGET}", state) in cur_tags)
+    return (expandTagFromState("broken weapon <TARGET>", state) in cur_tags)
     return False
 
 def actor_broken_weapon(state):
     cur_tags = getCurState(state)
-    return (expandTagFromState("broken weapon {ACTOR}", state) in cur_tags)
+    return (expandTagFromState("broken weapon <ACTOR>", state) in cur_tags)
     return False
    
 def respond_actor_broken_weapon(state):
@@ -548,77 +548,77 @@ def efx_signal_dropped_weapon(state):
     
 def efx_begin_combat(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("in combat {ACTOR}", state)])
-    effects.update([expandTagFromAction("in combat {TARGET}", state)])
-    effects.update([expandTagFromAction("has weapon {ACTOR}", state)])
-    effects.update([expandTagFromAction("has weapon {TARGET}", state)])
+    effects.update([expandTagFromAction("in combat <ACTOR>", state)])
+    effects.update([expandTagFromAction("in combat <TARGET>", state)])
+    effects.update([expandTagFromAction("has weapon <ACTOR>", state)])
+    effects.update([expandTagFromAction("has weapon <TARGET>", state)])
     return effects
     
 def efx_attack_target(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("attacking {TARGET}", state)])
+    effects.update([expandTagFromAction("attacking <TARGET>", state)])
     return effects
 
 def efx_knockdown_target(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("fallen {TARGET}", state)])
+    effects.update([expandTagFromAction("fallen <TARGET>", state)])
     return effects
     
 def efx_knockdown_actor(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("fallen {ACTOR}", state)])
+    effects.update([expandTagFromAction("fallen <ACTOR>", state)])
     return effects
     
 def efx_wound_target(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("wounded {TARGET}", state)])
+    effects.update([expandTagFromAction("wounded <TARGET>", state)])
     return effects
     
 def efx_wound_actor(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("wounded {ACTOR}", state)])
+    effects.update([expandTagFromAction("wounded <ACTOR>", state)])
     return effects
     
 def efx_stagger_target(state):
     effects = state["tags"]
-    effects[expandTagFromAction("staggered {TARGET}", state)] = 0
+    effects[expandTagFromAction("staggered <TARGET>", state)] = 0
     return effects
     
 def efx_stagger_actor(state):
     effects = state["tags"]
-    effects[expandTagFromAction("staggered {ACTOR}", state)] = 0
+    effects[expandTagFromAction("staggered <ACTOR>", state)] = 0
     return effects
 
 def efx_break_weapon_target(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("broken weapon {TARGET}", state)])
+    effects.update([expandTagFromAction("broken weapon <TARGET>", state)])
     effects.update(["signal broken weapon"])
-    effects.subtract([expandTagFromAction("has weapon {TARGET}", state)])
+    effects.subtract([expandTagFromAction("has weapon <TARGET>", state)])
     effects = efx_signal_broken_weapon(state)
     return effects
     
 def efx_drop_weapon_target(state):
     effects = state["tags"]
-    effects.subtract([expandTagFromAction("has weapon {TARGET}", state)])
+    effects.subtract([expandTagFromAction("has weapon <TARGET>", state)])
     effects = efx_signal_dropped_weapon(state)
     return effects
     
 def efx_break_weapon_actor(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("broken weapon {ACTOR}", state)])
+    effects.update([expandTagFromAction("broken weapon <ACTOR>", state)])
     effects.update(["signal broken weapon"])
-    effects.subtract([expandTagFromAction("has weapon {ACTOR}", state)])
+    effects.subtract([expandTagFromAction("has weapon <ACTOR>", state)])
     effects = efx_signal_broken_weapon(state)
     return effects
     
 def efx_recover_balance_actor(state):
     effects = state["tags"]
-    effects.subtract([expandTagFromAction("staggered {ACTOR}", state)])
+    effects.subtract([expandTagFromAction("staggered <ACTOR>", state)])
     return effects
 
 def efx_end_attack(state):
     effects = state["tags"]
-    effects.subtract([expandTagFromAction("attacking {ACTOR}", state)])
+    effects.subtract([expandTagFromAction("attacking <ACTOR>", state)])
     return effects
 
 def efx_parry(state):
@@ -628,15 +628,15 @@ def efx_parry(state):
 
 def efx_end_combat(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("end combat {ACTOR}", state)])
-    effects.update([expandTagFromAction("end combat {TARGET}", state)])
-    del effects[expandTagFromAction("in combat {ACTOR}", state)]
-    del effects[expandTagFromAction("in combat {TARGET}", state)]
+    effects.update([expandTagFromAction("end combat <ACTOR>", state)])
+    effects.update([expandTagFromAction("end combat <TARGET>", state)])
+    del effects[expandTagFromAction("in combat <ACTOR>", state)]
+    del effects[expandTagFromAction("in combat <TARGET>", state)]
     return effects
     
 def efx_emotion_anger_actor(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("emotion {ACTOR}: anger", state)])
+    effects.update([expandTagFromAction("emotion <ACTOR>: anger", state)])
     return effects
     
 def efx_clear_signal(state, signal):
@@ -658,64 +658,64 @@ swordfight_actcat = [
 {Cmd.prereq: [not_in_combat, not_end_combat], Cmd.effects: [efx_signal_start_combat], Cmd.action: "{BEGIN: MELEE COMBAT}"},
 {Cmd.prereq: [not_in_combat, if_end_combat], Cmd.effects: [], Cmd.command: [cmd_efx_resolve_conflict], Cmd.action: "{END: MELEE COMBAT}"},
 #Begin
-{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "In a moment {ACTOR} stepped quickly {UPON THE PLACE} where {ANTAGONIST} stood."},
-{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "At last {ACTOR} struck like a flash, and--\"rap!\"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow; and so this mighty battle began."},
-{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Then {ACTOR} spat upon {ACTOR'S} hands and, grasping {ACTOR'S} {ACTOR_WEAPON}, came straight at the other."},
-{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "{ACTOR} gripped {ACTOR'S} {ACTOR_WEAPON} and threw {ACTOR_SELF} upon {ACTOR'S} guard."},
-{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "{ACTOR} said nothing at first but stood looking at {ANTAGONIST} with a grim face."},
-{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Whatever {ACTOR} thought, {ACTOR} stood {ACTOR'S} ground, and now {ACTOR} and {ANTAGONIST} stood face to face."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "In a moment <ACTOR> stepped quickly <UPON THE PLACE> where <ANTAGONIST> stood."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "At last <ACTOR> struck like a flash, and--\"rap!\"--<ANTAGONIST> met the blow and turned it aside, and then smote back at <ACTOR>, who also turned the blow; and so this mighty battle began."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Then <ACTOR> spat upon <ACTOR'S> hands and, grasping <ACTOR'S> <ACTOR_WEAPON>, came straight at the other."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "<ACTOR> gripped <ACTOR'S> <ACTOR_WEAPON> and threw <ACTOR_SELF> upon <ACTOR'S> guard."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "<ACTOR> said nothing at first but stood looking at <ANTAGONIST> with a grim face."},
+{Cmd.prereq: [not_in_combat, respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "Whatever <ACTOR> thought, <ACTOR> stood <ACTOR'S> ground, and now <ACTOR> and <ANTAGONIST> stood face to face."},
 # Start Attack
-{Cmd.prereq: [can_attack], Cmd.effects: [efx_attack_target], Cmd.action: "{PAR}{ACTOR} made a feint, and then delivered a blow at {ANTAGONIST} that, had it met its mark, would have tumbled {ANTAGONIST} speedily."},
-{Cmd.prereq: [can_attack], Cmd.effects: [efx_attack_target], Cmd.action: "{PAR}At last {ACTOR} saw {ACTOR'S} chance, and, throwing all the strength {ACTOR} felt going from {ACTOR_HIM} into one blow that might have felled an ox, {ACTOR} struck at {ANTAGONIST} with might and main."},
+{Cmd.prereq: [can_attack], Cmd.effects: [efx_attack_target], Cmd.action: "<PAR><ACTOR> made a feint, and then delivered a blow at <ANTAGONIST> that, had it met its mark, would have tumbled <ANTAGONIST> speedily."},
+{Cmd.prereq: [can_attack], Cmd.effects: [efx_attack_target], Cmd.action: "<PAR>At last <ACTOR> saw <ACTOR'S> chance, and, throwing all the strength <ACTOR> felt going from <ACTOR_HIM> into one blow that might have felled an ox, <ACTOR> struck at <ANTAGONIST> with might and main."},
 # Response, leading to knockdown of original attacker
-{Cmd.prereq: [incoming_attack, is_offbalance_actor], Cmd.effects: [efx_knockdown_target, efx_recover_balance_actor, efx_drop_weapon_target], Cmd.action: "But {ACTOR} regained {ACTOR_SELF} quickly and, at arm's length, struck back a blow at {ANTAGONIST}, and this time the stroke reached its mark, and down went {ANTAGONIST} at full length, {ANTAGONIST'S} {ANTAGONIST_WEAPON} flying from {ANTAGONIST'S} hand as {ANTAGONIST} fell."},
+{Cmd.prereq: [incoming_attack, is_offbalance_actor], Cmd.effects: [efx_knockdown_target, efx_recover_balance_actor, efx_drop_weapon_target], Cmd.action: "But <ACTOR> regained <ACTOR_SELF> quickly and, at arm's length, struck back a blow at <ANTAGONIST>, and this time the stroke reached its mark, and down went <ANTAGONIST> at full length, <ANTAGONIST'S> <ANTAGONIST_WEAPON> flying from <ANTAGONIST'S> hand as <ANTAGONIST> fell."},
 # Back-and-forth stalemate
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "{ACTOR} struck like a flash, and--\"rap!\"--{ANTAGONIST} met the blow and turned it aside, and then smote back at {ACTOR}, who also turned the blow."},
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "But {ACTOR} turned the blow right deftly and in return gave one as stout, which {ANTAGONIST} also turned as {ACTOR} had done."},
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "Thrice {ACTOR} struck {ANTAGONIST}; once upon the arm and twice upon the ribs, and yet {ACTOR} warded all the other's blows, only one of which, had it met its mark, would have laid {ACTOR} lower in the dust than {ACTOR} had ever gone before."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "<ACTOR> struck like a flash, and--\"rap!\"--<ANTAGONIST> met the blow and turned it aside, and then smote back at <ACTOR>, who also turned the blow."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "But <ACTOR> turned the blow right deftly and in return gave one as stout, which <ANTAGONIST> also turned as <ACTOR> had done."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "Thrice <ACTOR> struck <ANTAGONIST>; once upon the arm and twice upon the ribs, and yet <ACTOR> warded all the other's blows, only one of which, had it met its mark, would have laid <ACTOR> lower in the dust than <ACTOR> had ever gone before."},
 #Response, counterattack wounds original attacker
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_wound_target, efx_end_attack], Cmd.action: "{ANTAGONIST} soon found that {ANTAGONIST} had met {ANTAGONIST'S} match, for {ACTOR} warded and parried all of the attacks, and, before {ANTAGONIST} thought, {ACTOR} gave {ANTAGONIST} a rap upon the ribs in return."},
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_wound_target, efx_end_attack], Cmd.action: "So shrewd was the stroke that {ACTOR} came within a hair's-breadth of falling, but {ACTOR} regained {ACTOR_SELF} right quickly and, by a dexterous blow, gave {ANTAGONIST} a crack on the crown that caused the blood to flow."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_wound_target, efx_end_attack], Cmd.action: "<ANTAGONIST> soon found that <ANTAGONIST> had met <ANTAGONIST'S> match, for <ACTOR> warded and parried all of the attacks, and, before <ANTAGONIST> thought, <ACTOR> gave <ANTAGONIST> a rap upon the ribs in return."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_wound_target, efx_end_attack], Cmd.action: "So shrewd was the stroke that <ACTOR> came within a hair's-breadth of falling, but <ACTOR> regained <ACTOR_SELF> right quickly and, by a dexterous blow, gave <ANTAGONIST> a crack on the crown that caused the blood to flow."},
 #Response, counterattack knocks down original attacker
-{Cmd.prereq: [can_parry, target_vulnerable], Cmd.effects: [efx_knockdown_target, efx_end_attack], Cmd.action: "But {ACTOR} warded the blow and thwacked {ANTAGONIST}, and this time so fairly that {ANTAGONIST} fell heels over head, as the queen pin falls in a game of bowls."},
-{Cmd.prereq: [can_parry, target_vulnerable], Cmd.effects: [efx_knockdown_target, efx_end_attack], Cmd.action: "In response, {ACTOR} struck {ANTAGONIST'S} {ANTAGONIST_WEAPON} so fairly in the middle that {ANTAGONIST} could hardly hold {ANTAGONIST'S} {ANTAGONIST_WEAPON} in {ANTAGONIST'S} hand; again {ACTOR} struck, and {ANTAGONIST} bent beneath the blow; a third time {ACTOR} struck, and now not only fairly beat down {ANTAGONIST'S} guard, but gave {ANTAGONIST} such a rap, also, that down {ANTAGONIST} tumbled."},
+{Cmd.prereq: [can_parry, target_vulnerable], Cmd.effects: [efx_knockdown_target, efx_end_attack], Cmd.action: "But <ACTOR> warded the blow and thwacked <ANTAGONIST>, and this time so fairly that <ANTAGONIST> fell heels over head, as the queen pin falls in a game of bowls."},
+{Cmd.prereq: [can_parry, target_vulnerable], Cmd.effects: [efx_knockdown_target, efx_end_attack], Cmd.action: "In response, <ACTOR> struck <ANTAGONIST'S> <ANTAGONIST_WEAPON> so fairly in the middle that <ANTAGONIST> could hardly hold <ANTAGONIST'S> <ANTAGONIST_WEAPON> in <ANTAGONIST'S> hand; again <ACTOR> struck, and <ANTAGONIST> bent beneath the blow; a third time <ACTOR> struck, and now not only fairly beat down <ANTAGONIST'S> guard, but gave <ANTAGONIST> such a rap, also, that down <ANTAGONIST> tumbled."},
 # Response: failed, weapon breaks
-{Cmd.prereq: [can_parry, target_vulnerable], Cmd.effects: [efx_break_weapon_target], Cmd.action: "{ANTAGONIST} warded two of the strokes, but at the third, {ANTAGONIST'S} {ANTAGONIST_WEAPON} broke beneath the mighty blows of {ACTOR}."},
+{Cmd.prereq: [can_parry, target_vulnerable], Cmd.effects: [efx_break_weapon_target], Cmd.action: "<ANTAGONIST> warded two of the strokes, but at the third, <ANTAGONIST'S> <ANTAGONIST_WEAPON> broke beneath the mighty blows of <ACTOR>."},
 #React to broken weapon
-{Cmd.prereq: [respond_actor_broken_weapon], Cmd.effects: [efx_end_combat, efx_clear_signal_broken_weapon], Cmd.action: "\"Now, ill betide thee, traitor {ACTOR_WEAPON},\" cried {ACTOR}, as it fell from {ACTOR'S} hands; \"a foul {ACTOR_WEAPON} art thou to serve me thus in my hour of need.\""},
+{Cmd.prereq: [respond_actor_broken_weapon], Cmd.effects: [efx_end_combat, efx_clear_signal_broken_weapon], Cmd.action: "\"Now, ill betide thee, traitor <ACTOR_WEAPON>,\" cried <ACTOR>, as it fell from <ACTOR'S> hands; \"a foul <ACTOR_WEAPON> art thou to serve me thus in my hour of need.\""},
 #Land a hit
-{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "At last {ACTOR} gave {ANTAGONIST} a blow upon the ribs that made {ANTAGONIST'S} jacket smoke like a damp straw thatch in the sun."},
-{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "And now did {ANTAGONIST'S} {ANTAGONIST_ARMOR} stand {ANTAGONIST} in good stead, and but for it {ANTAGONIST} might never have held {ANTAGONIST_WEAPON} in hand again."},
-{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "As it was, the blow {ANTAGONIST} caught beside the head was so shrewd that it sent {ANTAGONIST} staggering, so that, if {ACTOR} had had the strength to follow up {ACTOR'S} vantage, it would have been ill for {ANTAGONIST}."},
-{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "Then, raising {ACTOR'S} {ACTOR_WEAPON}, {ACTOR} dealt {ANTAGONIST} a blow upon the ribs."},
+{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "At last <ACTOR> gave <ANTAGONIST> a blow upon the ribs that made <ANTAGONIST'S> jacket smoke like a damp straw thatch in the sun."},
+{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "And now did <ANTAGONIST'S> <ANTAGONIST_ARMOR> stand <ANTAGONIST> in good stead, and but for it <ANTAGONIST> might never have held <ANTAGONIST_WEAPON> in hand again."},
+{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "As it was, the blow <ANTAGONIST> caught beside the head was so shrewd that it sent <ANTAGONIST> staggering, so that, if <ACTOR> had had the strength to follow up <ACTOR'S> vantage, it would have been ill for <ANTAGONIST>."},
+{Cmd.prereq: [can_attack, target_vulnerable], Cmd.effects: [efx_stagger_target], Cmd.action: "Then, raising <ACTOR'S> <ACTOR_WEAPON>, <ACTOR> dealt <ANTAGONIST> a blow upon the ribs."},
 #Reaction: Emotion, leading to renewed attack
-{Cmd.prereq: [react_with_anger_actor], Cmd.effects: [efx_emotion_anger_actor], Cmd.action: "Then {ACTOR} grew mad with anger and smote with all {ACTOR'S} might at the other."},
-{Cmd.prereq: [react_with_anger_actor], Cmd.effects: [efx_emotion_anger_actor], Cmd.action: "At this {ANTAGONIST} laughed aloud, and {ACTOR} grew more angry than ever, and smote again with all {ACTOR'S} might and main."},
+{Cmd.prereq: [react_with_anger_actor], Cmd.effects: [efx_emotion_anger_actor], Cmd.action: "Then <ACTOR> grew mad with anger and smote with all <ACTOR'S> might at the other."},
+{Cmd.prereq: [react_with_anger_actor], Cmd.effects: [efx_emotion_anger_actor], Cmd.action: "At this <ANTAGONIST> laughed aloud, and <ACTOR> grew more angry than ever, and smote again with all <ACTOR'S> might and main."},
 # General back and forth
-{Cmd.prereq: [can_attack], Cmd.action: "Well did {ACTOR} hold {ACTOR'S} own that day."},
-{Cmd.prereq: [can_attack], Cmd.action: "This way and that they fought, and back and forth, {ACTOR'S} {ACTOR_ATTRIBUTE} against the {ANTAGONIST'S} {ANTAGONIST_ATTRIBUTE}."},
+{Cmd.prereq: [can_attack], Cmd.action: "Well did <ACTOR> hold <ACTOR'S> own that day."},
+{Cmd.prereq: [can_attack], Cmd.action: "This way and that they fought, and back and forth, <ACTOR'S> <ACTOR_ATTRIBUTE> against the <ANTAGONIST'S> <TARGET_ATTRIBUTE>."},
 {Cmd.prereq: [can_attack], Cmd.action: "Then up and down and back and forth they trod, the blows falling so thick and fast that, at a distance, one would have thought that half a score were fighting."},
 {Cmd.prereq: [can_attack], Cmd.action: "Thus they fought for nigh a half an hour, until the ground was all plowed up with the digging of their heels, and their breathing grew labored like the ox in the furrow."},
-{Cmd.prereq: [can_attack], Cmd.action: "The dust of the highway rose up around them like a cloud, so that at times the onlookers could see nothing, but only hear the {ACTOR_WEAPON_SOUND} of {ACTOR_WEAPON} against {ANTAGONIST_WEAPON}."},
+{Cmd.prereq: [can_attack], Cmd.action: "The dust of the highway rose up around them like a cloud, so that at times the onlookers could see nothing, but only hear the <ACTOR_WEAPON_SOUND> of <ACTOR_WEAPON> against <ANTAGONIST_WEAPON>."},
 {Cmd.prereq: [can_attack], Cmd.action: "So they stood, each in their place, neither moving a finger's-breadth back, for one good hour, and many blows were given and received by each in that time, till here and there were sore bones and bumps, yet neither thought of crying \"Enough,\" nor seemed likely to fall."},
-{Cmd.prereq: [can_attack], Cmd.action: "Now and then they stopped to rest, and each thought that they never had seen in all their life before such a hand at {ACTOR_WEAPON} or {ANTAGONIST_WEAPON}."},
-{Cmd.prereq: [is_fallen_actor, not_end_combat], Cmd.effects: [efx_end_combat], Cmd.action: "And so {ACTOR} was defeated by {ANTAGONIST'S} {ANTAGONIST_WEAPON}"},
+{Cmd.prereq: [can_attack], Cmd.action: "Now and then they stopped to rest, and each thought that they never had seen in all their life before such a hand at <ACTOR_WEAPON> or <ANTAGONIST_WEAPON>."},
+{Cmd.prereq: [is_fallen_actor, not_end_combat], Cmd.effects: [efx_end_combat], Cmd.action: "And so <ACTOR> was defeated by <ANTAGONIST'S> <ANTAGONIST_WEAPON>"},
 # Friar Tuck
 {Cmd.prereq: [respond_start_combat], Cmd.effects: [efx_begin_combat], Cmd.action: "So, without more ado, they came together, and thereupon began a fierce and mighty battle."},
 {Cmd.prereq: [can_attack], Cmd.action: "Right and left, and up and down and back and forth they fought."},
-{Cmd.prereq: [can_attack], Cmd.action: "The {ACTOR_WEAPON} {ACTOR_WEAPON_VERB} and then met with a {ACTOR_WEAPON_SOUND} that sounded far and near."},
+{Cmd.prereq: [can_attack], Cmd.action: "The <ACTOR_WEAPON> <ACTOR_WEAPON_VERB> and then met with a <ACTOR_WEAPON_SOUND> that sounded far and near."},
 {Cmd.prereq: [can_attack], Cmd.action: "This was no playful bout, but a grim and serious fight of real earnest."},
 {Cmd.prereq: [can_attack], Cmd.action: "Thus they strove for an hour or more, pausing every now and then to rest, at which times each looked at the other with wonder, and thought that never had they seen so stout a foe; then once again they would go at it more fiercely than ever."},
 {Cmd.prereq: [can_attack, not_is_wounded_actor, not_is_wounded_target], Cmd.action: "Yet in all this time neither had harmed the other nor caused his blood to flow."},
 # Beggar Riccon
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "Then {ACTOR} swung his {WEAPON} also, and struck a mighty blow at {TARGET}, which {TARGET} turned."},
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action:  "Three blows {TARGET} struck, yet never one touched so much as a hair of {ACTOR'S} head. "},
-{Cmd.prereq: [can_parry], Cmd.effects: [efx_knockdown_target, efx_drop_weapon_target], Cmd.action: "Then {ACTOR} saw {ACTOR'S} chance, and, ere you could count three, {TARGET'S} {TARGET_WEAPON} was flying away, and {TARGET} {TARGET_SELF} lay upon the {GROUND_DESCRIPTION} with no more motion than you could find in an empty pudding bag."}
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action: "Then <ACTOR> swung his <ACTOR_WEAPON> also, and struck a mighty blow at <TARGET>, which <TARGET> turned."},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_parry], Cmd.action:  "Three blows <TARGET> struck, yet never one touched so much as a hair of <ACTOR'S> head. "},
+{Cmd.prereq: [can_parry], Cmd.effects: [efx_knockdown_target, efx_drop_weapon_target], Cmd.action: "Then <ACTOR> saw <ACTOR'S> chance, and, ere you could count three, <TARGET'S> <TARGET_WEAPON> was flying away, and <TARGET> <TARGET_SELF> lay upon the <GROUND_DESCRIPTION> with no more motion than you could find in an empty pudding bag."}
 ]
 
 def respond_start_weigh_anchor(state):
     cur_tags = getCurState(state)
-    search_tag = expandTagFromState("signal start weigh anchor {ACTOR SHIP}", state)
+    search_tag = expandTagFromState("signal start weigh anchor <ACTOR SHIP>", state)
     for tag in cur_tags:
         if search_tag in tag:
             return True
@@ -723,50 +723,50 @@ def respond_start_weigh_anchor(state):
 
 def respond_prepare_capstan(state):
     cur_tags = getCurState(state)
-    search_tag = expandTagFromState("signal prepare capstan {ACTOR SHIP}", state)
+    search_tag = expandTagFromState("signal prepare capstan <ACTOR SHIP>", state)
     for tag in cur_tags:
         if search_tag in tag:
             return True
     return False
 
 def if_anchor_aweigh(state):
-    return is_tag_count_positive("anchor aweigh {ACTOR SHIP}", state)
+    return is_tag_count_positive("anchor aweigh <ACTOR SHIP>", state)
     
 def not_anchor_aweigh(state):
-    return not is_tag_count_positive("anchor aweigh {ACTOR SHIP}", state)
+    return not is_tag_count_positive("anchor aweigh <ACTOR SHIP>", state)
     
 def if_turning_capstan(state):
-    return is_tag_count_positive("turning capstan {ACTOR SHIP}", state)
+    return is_tag_count_positive("turning capstan <ACTOR SHIP>", state)
 
 def if_weighing_anchor(state):
-    return is_tag_count_positive("weighing anchor {ACTOR SHIP}", state)
+    return is_tag_count_positive("weighing anchor <ACTOR SHIP>", state)
 
 def if_weighing_anchor_end(state):
-    return is_tag_count_positive("weighing anchor end {ACTOR SHIP}", state)
+    return is_tag_count_positive("weighing anchor end <ACTOR SHIP>", state)
 
 def if_begin_weighing_anchor(state):
-    return is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
+    return is_tag_count_positive("begin weighing anchor <ACTOR SHIP>", state)
 
 #def begin_weighing_anchor(state):
-#    return is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
+#    return is_tag_count_positive("begin weighing anchor <ACTOR SHIP>", state)
 
 def if_anchor_struggle(state):
-    return is_tag_count_positive("anchor struggle {ACTOR SHIP}", state)
+    return is_tag_count_positive("anchor struggle <ACTOR SHIP>", state)
 
 def not_turning_capstan(state):
-    return not is_tag_count_positive("turning capstan {ACTOR SHIP}", state)
+    return not is_tag_count_positive("turning capstan <ACTOR SHIP>", state)
 
 def not_weighing_anchor(state):
-    return not is_tag_count_positive("weighing anchor {ACTOR SHIP}", state)
+    return not is_tag_count_positive("weighing anchor <ACTOR SHIP>", state)
 
 def not_weighing_anchor_end(state):
-    return not is_tag_count_positive("weighing anchor end {ACTOR SHIP}", state)
+    return not is_tag_count_positive("weighing anchor end <ACTOR SHIP>", state)
     
 def not_begin_weighing_anchor(state):
-    return not is_tag_count_positive("begin weighing anchor {ACTOR SHIP}", state)
+    return not is_tag_count_positive("begin weighing anchor <ACTOR SHIP>", state)
     
 def not_anchor_struggle(state):
-    return not is_tag_count_positive("anchor struggle {ACTOR SHIP}", state)
+    return not is_tag_count_positive("anchor struggle <ACTOR SHIP>", state)
     
 def is_tag_count_greater_than(tag, than, state):
     cur_tags = getCurState(state)
@@ -779,70 +779,70 @@ def is_tag_count_less_than(tag, than, state):
     return cur_tags[expandTagFromState(tag, state)] < than
                         
 def if_anchor_at_long_stay(state):
-    if not is_tag_count_less_than("turning capstan {ACTOR SHIP}", 10, state):
+    if not is_tag_count_less_than("turning capstan <ACTOR SHIP>", 10, state):
         return False
-    return is_tag_count_greater_than("turning capstan {ACTOR SHIP}", 8, state)
+    return is_tag_count_greater_than("turning capstan <ACTOR SHIP>", 8, state)
 
 def if_anchor_at_short_stay(state):
-    if not is_tag_count_less_than("turning capstan {ACTOR SHIP}", 7, state):
+    if not is_tag_count_less_than("turning capstan <ACTOR SHIP>", 7, state):
         return False
-    return is_tag_count_greater_than("turning capstan {ACTOR SHIP}", 5, state)
+    return is_tag_count_greater_than("turning capstan <ACTOR SHIP>", 5, state)
 
 def if_anchor_at_up_and_down(state):
-    if not is_tag_count_less_than("turning capstan {ACTOR SHIP}", 4, state):
+    if not is_tag_count_less_than("turning capstan <ACTOR SHIP>", 4, state):
         return False
-    return is_tag_count_greater_than("turning capstan {ACTOR SHIP}", 2, state)
+    return is_tag_count_greater_than("turning capstan <ACTOR SHIP>", 2, state)
 
 def if_anchor_at_anchor_aweigh(state):
-    return is_tag_count_less_than("turning capstan {ACTOR SHIP}", 2, state)
+    return is_tag_count_less_than("turning capstan <ACTOR SHIP>", 2, state)
     
     
 
 def efx_signal_start_weigh_anchor(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("signal start weigh anchor {ACTOR SHIP}", state)])
-    effects.update([expandTagFromAction("weighing anchor {ACTOR SHIP}", state)])
-    effects.update([expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state)])
+    effects.update([expandTagFromAction("signal start weigh anchor <ACTOR SHIP>", state)])
+    effects.update([expandTagFromAction("weighing anchor <ACTOR SHIP>", state)])
+    effects.update([expandTagFromAction("begin weighing anchor <ACTOR SHIP>", state)])
     return effects
     
 def efx_signal_prepare_capstan(state):
     effects = state["tags"]
-    effects.update([expandTagFromAction("signal prepare capstan {ACTOR SHIP}", state)])
-    effects = efx_clear_signal(state, expandTagFromAction("signal start weigh anchor {ACTOR SHIP}", state))
+    effects.update([expandTagFromAction("signal prepare capstan <ACTOR SHIP>", state)])
+    effects = efx_clear_signal(state, expandTagFromAction("signal start weigh anchor <ACTOR SHIP>", state))
     return effects
     
 def efx_begin_turning_capstan(state):
     effects = state["tags"]
-    effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 12
-    effects[expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state)] = 0
-    effects = efx_clear_signal(state, expandTagFromAction("signal prepare capstan {ACTOR SHIP}", state))
+    effects[expandTagFromAction("turning capstan <ACTOR SHIP>", state)] = 12
+    effects[expandTagFromAction("begin weighing anchor <ACTOR SHIP>", state)] = 0
+    effects = efx_clear_signal(state, expandTagFromAction("signal prepare capstan <ACTOR SHIP>", state))
     return effects
     
 def efx_turn_capstan(state):
     effects = state["tags"]
-    effects.subtract([expandTagFromAction("turning capstan {ACTOR SHIP}", state)])
+    effects.subtract([expandTagFromAction("turning capstan <ACTOR SHIP>", state)])
     return effects
     
 def efx_finish_turn_capstan(state):
     effects = state["tags"]
-    effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("turning capstan <ACTOR SHIP>", state)] = 0
     return effects
     
 def efx_end_weigh_anchor(state):
     effects = state["tags"]
-    effects[expandTagFromAction("turning capstan {ACTOR SHIP}", state)] = 0
-    effects[expandTagFromAction("weighing anchor {ACTOR SHIP}", state)] = 0
-    effects[expandTagFromAction("begin weighing anchor {ACTOR SHIP}", state)] = 0
-    effects[expandTagFromAction("anchor aweigh {ACTOR SHIP}", state)] = 1
-    effects[expandTagFromAction("weighing anchor end {ACTOR SHIP}", state)] = 1
-    effects = efx_clear_signal(state, expandTagFromAction("weighing anchor {ACTOR SHIP}", state))
+    effects[expandTagFromAction("turning capstan <ACTOR SHIP>", state)] = 0
+    effects[expandTagFromAction("weighing anchor <ACTOR SHIP>", state)] = 0
+    effects[expandTagFromAction("begin weighing anchor <ACTOR SHIP>", state)] = 0
+    effects[expandTagFromAction("anchor aweigh <ACTOR SHIP>", state)] = 1
+    effects[expandTagFromAction("weighing anchor end <ACTOR SHIP>", state)] = 1
+    effects = efx_clear_signal(state, expandTagFromAction("weighing anchor <ACTOR SHIP>", state))
     return effects
 
 def cmd_efx_anchor_aweigh(actproc):
     charone = actproc().parent().char_one
     chartwo = actproc().parent().char_two
     transcript = actproc().emitTranscript()
-    act = {Cmd.effects: [lambda state: state["tags"] + collections.Counter([expandTag("anchor aweigh {ACTOR SHIP}", charone, chartwo)])],
+    act = {Cmd.effects: [lambda state: state["tags"] + collections.Counter([expandTag("anchor aweigh <ACTOR SHIP>", charone, chartwo)])],
            Cmd.action: transcript }
     actproc().sendToParentConflict(act)
 
@@ -850,47 +850,47 @@ def cmd_efx_anchor_aweigh(actproc):
 # Crew vs Anchor
 weigh_anchor_actcat = [
 #Temp: an order to jumpstart the conflict
-{Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
-{Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "{BEGIN: WEIGH ANCHOR}"},
-{Cmd.prereq: [is_ship, if_weighing_anchor_end, not_weighing_anchor, if_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_anchor_aweigh, cmd_efx_resolve_conflict], Cmd.action: "{END: WEIGH ANCHOR}"},
+{Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "<BEGIN: WEIGH ANCHOR>"},
+{Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "<BEGIN: WEIGH ANCHOR>"},
+{Cmd.prereq: [is_ship, if_weighing_anchor_end, not_weighing_anchor, if_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_anchor_aweigh, cmd_efx_resolve_conflict], Cmd.action: "<END: WEIGH ANCHOR>"},
 # clear the deck, make ready
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}The order was given, and soon the messenger was run out and the capstan manned."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The order was given, and soon the messenger was run out and the capstan manned."},
 # capstan bars fitted to capstan
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} fitted the bars, and the #sailors# took their positions around the capstan."},
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "{crewmember} took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "\"Take your positions, you #sailors#,\" said {THE BOATSWAIN}."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember> fitted the bars, and the #sailors# took their positions around the capstan."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember> took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "\"Take your positions, you #sailors#,\" said <THE BOATSWAIN>."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "There came soon the familiar racket of making sail and trimming yards and the clank of the capstan pawls. "},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
 #pulling at the capstan
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained."},
-{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}\"That's your sort, my hearties,\" exclaimed {THE BOATSWAIN} encouragingly, as {THE BOATSWAIN} applied {THE BOATSWAIN'S} tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!\""},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "<PAR>\"That's your sort, my hearties,\" exclaimed <THE BOATSWAIN> encouragingly, as <THE BOATSWAIN> applied <THE BOATSWAIN'S> tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!\""},
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# strained at the bars, the pawl clicking as they drove the capstan round."},
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The chorus of the shanty kept time with the clicks of the pawl."},
 #sing a shanty
-{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: ["As the #sailors# turned the capstan, {THE BOATSWAIN} took up the verse and the crew repeated the chorus: {SHANTY}", "The crew sang in time with their work: {SHANTY}", "As was their practice, they sang to maintain the rhythm. {SHANTY}"]},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: ["As the #sailors# turned the capstan, <THE BOATSWAIN> took up the verse and the crew repeated the chorus: <SHANTY>", "The crew sang in time with their work: <SHANTY>", "As was their practice, they sang to maintain the rhythm. <SHANTY>"]},
 # straining, it goes slowly...
 {Cmd.prereq: [is_ship, if_turning_capstan, if_anchor_struggle], Cmd.effects: [], Cmd.action: ["The anchor held fast, drawing line tighter and pulling the ship closer.", "The #sailors# strained against the wheel of the capstan, each rachet of the pawl a hard won fight."]},
 # call out: at long stay / at short stay, up and down, anchors aweigh
-{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_long_stay#"},
-{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_short_stay#"},
-{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_up_and_down#"},
-{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "{PAR}#weigh_anchor_anchors_aweigh#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_long_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "<PAR>#weigh_anchor_long_stay#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_short_stay], Cmd.effects: [efx_turn_capstan], Cmd.action: "<PAR>#weigh_anchor_short_stay#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_up_and_down], Cmd.effects: [efx_turn_capstan], Cmd.action: "<PAR>#weigh_anchor_up_and_down#"},
+{Cmd.prereq: [is_ship, if_turning_capstan, if_weighing_anchor, if_anchor_at_anchor_aweigh], Cmd.effects: [efx_finish_turn_capstan], Cmd.action: "<PAR>#weigh_anchor_anchors_aweigh#"},
 # catting the anchor
-{Cmd.prereq: [is_ship, if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor, not_weighing_anchor_end], Cmd.effects: [efx_end_weigh_anchor], Cmd.action: "{PAR}#catting_1# #catting_2# #catting_3# #catting_4#"}
+{Cmd.prereq: [is_ship, if_weighing_anchor, if_anchor_at_anchor_aweigh, not_begin_weighing_anchor, not_weighing_anchor_end], Cmd.effects: [efx_end_weigh_anchor], Cmd.action: "<PAR>#catting_1# #catting_2# #catting_3# #catting_4#"}
 ]
 
 def cmd_efx_weigh_anchor(actproc):
     actor = actproc().parent().char_one
     target = actproc().parent().char_two
-    subconflict = Conflict(weigh_anchor_actcat, actor, target, [expandTag("weighing anchor {ACTOR SHIP}", actor, target), expandTag("begin weighing anchor {ACTOR SHIP}", actor, target)])
+    subconflict = Conflict(weigh_anchor_actcat, actor, target, [expandTag("weighing anchor <ACTOR SHIP>", actor, target), expandTag("begin weighing anchor <ACTOR SHIP>", actor, target)])
     actproc().parent().spawnSubconflict(subconflict)
     return # TODO
 
 def if_no_destination(state):
     cur_tags = getCurState(state)
     #print(cur_tags)
-    finddest = expandTagFromState("destination {ACTOR}", state)
+    finddest = expandTagFromState("destination <ACTOR>", state)
     curdest = None
     for tag in cur_tags:
         if finddest in tag:
@@ -901,8 +901,8 @@ def if_no_destination(state):
     
 def if_at_destination(state):
     cur_tags = getCurState(state)
-    findloc = expandTagFromState("location {ACTOR}", state)
-    finddest = expandTagFromState("destination {ACTOR}", state)
+    findloc = expandTagFromState("location <ACTOR>", state)
+    finddest = expandTagFromState("destination <ACTOR>", state)
     curloc = None
     curdest = None
     for tag in cur_tags:
@@ -921,49 +921,49 @@ def if_destination_overseas(state):
     return True # TODO: sometimes destinations can be on this island
     
 def if_voyaging(state):
-    return is_tag_count_positive("voyaging {ACTOR SHIP}", state)
+    return is_tag_count_positive("voyaging <ACTOR SHIP>", state)
     
 def if_in_harbor(state):
-    return is_tag_count_positive("in harbor {ACTOR SHIP}", state)
+    return is_tag_count_positive("in harbor <ACTOR SHIP>", state)
 
 def not_in_harbor(state):
-    return not is_tag_count_positive("in harbor {ACTOR SHIP}", state)
+    return not is_tag_count_positive("in harbor <ACTOR SHIP>", state)
     
 def efx_voyage_begins(state):
     effects = state["tags"]
     # TODO: change these temporary tag injections to reflect the actual current state of the ship
-    effects = effects + collections.Counter([expandTagFromAction("destination {ACTOR SHIP}: NOMANISAN ISLAND", state)])
-    effects = effects + collections.Counter([expandTagFromAction("in harbor {ACTOR SHIP}", state)])
-    effects = effects + collections.Counter([expandTagFromAction("voyaging {ACTOR SHIP}", state)])
+    effects = effects + collections.Counter([expandTagFromAction("destination <ACTOR SHIP>: NOMANISAN ISLAND", state)])
+    effects = effects + collections.Counter([expandTagFromAction("in harbor <ACTOR SHIP>", state)])
+    effects = effects + collections.Counter([expandTagFromAction("voyaging <ACTOR SHIP>", state)])
     return effects         
 
 def efx_leave_harbor(state):
     effects = state["tags"]
-    effects[expandTagFromAction("in harbor {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("in harbor <ACTOR SHIP>", state)] = 0
     return effects
     
 def efx_voyage_ends(state):
     effects = state["tags"]
-    effects[expandTagFromAction("voyaging {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("voyaging <ACTOR SHIP>", state)] = 0
     return effects
     
 def efx_drop_anchor(state):
     effects = state["tags"]
-    effects[expandTagFromAction("anchor aweigh {ACTOR SHIP}", state)] = 0
+    effects[expandTagFromAction("anchor aweigh <ACTOR SHIP>", state)] = 0
     return effects
     
 def efx_enter_harbor(state):
-    return state["tags"] + collections.Counter([expandTagFromAction("in harbor {ACTOR SHIP}", state)])
+    return state["tags"] + collections.Counter([expandTagFromAction("in harbor <ACTOR SHIP>", state)])
     
 def efx_move_location_destination(state):
     """
     Destinations are specified by tags formatted as 
-    "destination {ACTOR}: place_id". Locations use a similar
+    "destination <ACTOR>: place_id". Locations use a similar
     format. This swaps them out.
     """
     effects = state["tags"]
-    findloc = expandTagFromAction("location {ACTOR}", state)
-    finddest = expandTagFromAction("destination {ACTOR}", state)
+    findloc = expandTagFromAction("location <ACTOR>", state)
+    finddest = expandTagFromAction("destination <ACTOR>", state)
     curdest = None
     curloc = None
     for tag in effects:
@@ -975,39 +975,39 @@ def efx_move_location_destination(state):
         if not curloc is None:
             effects[curloc] = 0
         newloc = curdest.split(":",maxsplit=1)[1]
-        effects.update(["{0}:{1}".format(expandTagFromAction("location {ACTOR}", state), newloc)])
+        effects.update(["{0}:{1}".format(expandTagFromAction("location <ACTOR>", state), newloc)])
     return effects
     
 # Voyage: Ship vs. the Sea
 actcat_ship_voyage = [
-{Cmd.prereq: [is_ship, if_no_destination], Cmd.effects: [efx_voyage_begins], Cmd.action: "{TEMP: RANDOM DESTINATION}"},
+{Cmd.prereq: [is_ship, if_no_destination], Cmd.effects: [efx_voyage_begins], Cmd.action: "<TEMP: RANDOM DESTINATION>"},
 # Start the voyage
-{Cmd.prereq: [is_ship, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "{VOYAGE: BEGIN_VOYAGE}"},
+{Cmd.prereq: [is_ship, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "<VOYAGE: BEGIN_VOYAGE>"},
 # Weigh Anchor
-{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "{VOYAGE: WEIGH ANCHOR}"},
+{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<VOYAGE: WEIGH ANCHOR>"},
 # Leave the harbor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "{VOYAGE: LEAVE HARBOR}"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "<VOYAGE: LEAVE HARBOR>"},
 # Sailing
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [efx_move_location_destination], Cmd.action: "{VOYAGE: SAILING}"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [efx_move_location_destination], Cmd.action: "<VOYAGE: SAILING>"},
 # Perilous Journey
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "{VOYAGE: PERILS AT SEA}"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "<VOYAGE: PERILS AT SEA>"},
 # Arrive at destination, enter harbor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "{VOYAGE: ENTER HARBOR}"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<VOYAGE: ENTER HARBOR>"},
 # Drop anchor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_drop_anchor], Cmd.action: "{VOYAGE: DROP ANCHOR}"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_drop_anchor], Cmd.action: "<VOYAGE: DROP ANCHOR>"},
  # Voyage over
-{Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "{VOYAGE: END}"}
+{Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: END>"}
  ]
 
 actcat_ship_leave_port = []
 
 actcat_ship_grounded = [
-#{Cmd.prereq: [respond_start_pull_off], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "{PAR}With the anchor secured, the messenger was run out and the capstan manned."},                 
+#{Cmd.prereq: [respond_start_pull_off], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>With the anchor secured, the messenger was run out and the capstan manned."},                 
 ]
 
 
 actcat_pirate_book = [
-{Cmd.prereq: [], Cmd.command: [], Cmd.action: "The Voyages of {THE_CAPTAIN}, aboard #ship_name#"}
+{Cmd.prereq: [], Cmd.command: [], Cmd.action: "The Voyages of <THE_CAPTAIN>, aboard #ship_name#"}
 ]
 
 test_char_one = Character("Robin Hood")
@@ -1016,8 +1016,8 @@ test_char_two = Character("Little John")
 def parseActionForResearch(action):
     action.update({Cmd.current_actor: test_char_one, Cmd.current_target: test_char_two})
     desc = translateActionDescription(action)
-    desc.replace("{PAR}", "")
-    desc.replace("{DIALOG}", "")
+    desc.replace("<PAR>", "")
+    desc.replace("<DIALOG>", "")
     return desc
 
 def parseActionCatalog(action_catalog):
