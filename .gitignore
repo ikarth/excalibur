@@ -90,3 +90,6 @@ ENV/
 excalibur/data/gutenberg/text/
 excalibur/data/corpora/gutenberg/strip/
 excalibur/data/gutenberg/
+*.pickle
+excalibur/incidential/
+excalibur/tex2pdf*
