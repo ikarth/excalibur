@@ -14,6 +14,7 @@ import uuid
 import weakref
 import copy
 import traceback
+import places
 
 # For debugging...
 from IPython.utils import coloransi
@@ -27,6 +28,7 @@ class Cmd(Enum):
     effects = 5
     command = 6
     transcript = 7
+    injected = 900
     last_time = 999
 
 def is_decay_in_efx(efx):
@@ -34,37 +36,58 @@ def is_decay_in_efx(efx):
         return False
     return ("decay" in efx)
 
-
-def buildTranslationTable(actor, target):
+def findIdTagInState(tag, state):
+    id_tag_list = []
+    for i in state:
+        if tag in i:
+            #print(i.split(": ",1)[1])
+            id_tag_list.append(i.split(": ",1)[1])
+    if len(id_tag_list) > 0:
+        return id_tag_list.pop()
+    return None
+    
+    
+def buildTranslationTable(actor, target, state=None):
     ttable = []
-    ("<ACTOR>", actor.name)
-    ttable.append(["<ANTAGONIST>", target.name])
-    ttable.append(["<ACTOR_WEAPON>", actor.weapon_name])
-    ttable.append(["<ANTAGONIST_WEAPON>", target.weapon_name])
-    ttable.append(["<TARGET_WEAPON>", target.weapon_name])
-    ttable.append(["<ANTAGONIST'S>", target.possessive])
-    ttable.append(["<TARGET>", target.name])
-    ttable.append(["<TARGET'S>", target.possessive])
-    ttable.append(["<ACTOR'S>", actor.possessive])
-    ttable.append(["<TARGET_HIM>", target.him])
-    ttable.append(["<ACTOR_HIM>", actor.him])
-    ttable.append(["<ANTAGONIST_HER>", target.him])
-    ttable.append(["<ANTAGONIST_HIM>", target.him])
-    ttable.append(["<TARGET_HER>", target.him])
-    ttable.append(["<ACTOR_HER>", actor.him])
-    ttable.append(["<TARGET_SELF>", target.herself])
-    ttable.append(["<TARGET_SELF>", target.herself])
-    ttable.append(["<ACTOR_SELF>", actor.herself])
+    if None != actor and None != target:
+        ttable.append(["<ACTOR>", actor.name])
+        #TODO: move these to Transcript, expand handling
+        ttable.append(["<ANTAGONIST>", target.name])
+        ttable.append(["<ACTOR_WEAPON>", actor.weapon_name])
+        ttable.append(["<ANTAGONIST_WEAPON>", target.weapon_name])
+        ttable.append(["<TARGET_WEAPON>", target.weapon_name])
+        ttable.append(["<ANTAGONIST'S>", target.possessive])
+        ttable.append(["<TARGET>", target.name])
+        ttable.append(["<TARGET'S>", target.possessive])
+        ttable.append(["<ACTOR'S>", actor.possessive])
+        ttable.append(["<TARGET_HIM>", target.him])
+        ttable.append(["<ACTOR_HIM>", actor.him])
+        ttable.append(["<ANTAGONIST_HER>", target.him])
+        ttable.append(["<ANTAGONIST_HIM>", target.him])
+        ttable.append(["<TARGET_HER>", target.him])
+        ttable.append(["<ACTOR_HER>", actor.him])
+        ttable.append(["<TARGET_SELF>", target.herself])
+        ttable.append(["<TARGET_SELF>", target.herself])
+        ttable.append(["<ACTOR_SELF>", actor.herself])
     # TODO: replace the following with actual lookups
     ttable.append(["<ACTOR_ATTRIBUTE>", "skill"])
     ttable.append(["<TARGET_ATTRIBUTE>", "strength"])
     ttable.append(["<ACTOR_WEAPON_SOUND>", "clank"])
     ttable.append(["<ANTAGONIST_ARMOR>", "leather cap"])
+    if None != state:
+        ttable.append(["<DESCRIBE: LOCATION NAME>", 
+                       places.getPlaceName(places.findPlaceById(findIdTagInState(expandTag("location <ACTOR SHIP>: ", actor, target), state)))])
+        ttable.append(["<DESCRIBE: LOCATION DESCRIPTION>", 
+                       places.getPlaceDescription(places.findPlaceById(findIdTagInState(expandTag("location <ACTOR SHIP>: ", actor, target), state)))])
+        ttable.append(["<DESCRIBE: DESTINATION NAME>", 
+                       places.getPlaceName(places.findPlaceById(findIdTagInState(expandTag("destination <ACTOR SHIP>: ", actor, target), state)))])
+        ttable.append(["<DESCRIBE: DESTINATION DESCRIPTION>", 
+                       places.getPlaceDescription(places.findPlaceById(findIdTagInState(expandTag("destination <ACTOR SHIP>: ", actor, target), state)))])
     return ttable
         
     
 
-def translateActionDescription(action, specific_item = None):
+def translateActionDescription(action, specific_item=None, state=None):
     #print(action)
     #print(action.get(Cmd.current_actor))
     #print(specific_item)
@@ -83,11 +106,12 @@ def translateActionDescription(action, specific_item = None):
             return translateActionDescription(action, asi)
         else:
             return action_string
-    ttable = buildTranslationTable(actor, target)
-    if not ttable is None:
+    ttable = buildTranslationTable(actor, target, state)
+    if not ttable == None:
         for trans in ttable:
-            if not trans[1] is None:
-                action_string = action_string.replace(trans[0], trans[1])
+            if not None == trans:
+                if not trans[1] == None:
+                    action_string = action_string.replace(trans[0], trans[1])
     
     # TODO: add lookups for ships and crew
     return action_string
@@ -98,18 +122,23 @@ class ActionProcessor:
         self._uuid = uuid.uuid4()
         self._parent = None
         self._initial_state = []
+        self.__debugging_counter = 0
+        self.__internal_action_counter = 0
         
     def setInitialState(self, state):
         self._initial_state = state # TODO: include actor/target/character states
         
     def addAction(self, act):
-        self.queue.append(act)
+        newact = copy.deepcopy(act)
+        self.__internal_action_counter += 1
+        newact["internal_id"] = str(uuid.uuid4()) + "_" + str(self.__internal_action_counter)
+        self.queue.append(newact)
         # Commands are effects that operate on something other than 
         # the effects bag. They are expected to have side effects.
         # They also take effect immidiately, rather than being put
         # in the effects queue.
-        if Cmd.command in act:
-            for cmd_efx in act[Cmd.command]:
+        if Cmd.command in newact:
+            for cmd_efx in newact[Cmd.command]:
                 self.executeCommand(cmd_efx)
                 
     @property
@@ -120,15 +149,17 @@ class ActionProcessor:
     def parent(self, newparent):
         self._parent = weakref.ref(newparent) 
             
-    def currentState(self):
+    def currentState(self, stop=None):
         """
         Runs the effects in the queue, returning the current collection of tags
         """
+        self.__debugging_counter += 1
+        stop_next = 0 # skip ahead one more action, because we injected one...
         effect_bag = collections.Counter()
         if self._initial_state:
             effect_bag.update(self._initial_state)
         for act in self.queue:
-            if not act is None:
+            if act != None:
                 if Cmd.effects in act:
                     for efx in act[Cmd.effects]:
                         get_effect_bag = efx({"action": act, "tags": effect_bag})
@@ -139,7 +170,19 @@ class ActionProcessor:
                     if is_decay_in_efx(efx):
                         effect_bag.subtract([efx])
                 effect_bag = +effect_bag # remove zero and negative counts
-                
+                if None != stop:
+                    if stop_next > 0:
+                        if not(Cmd.injected in act):
+                            #print(effect_bag)
+                            return effect_bag # return early with a partial result
+                    #print(act.get("internal_id"))
+                    #print(stop.get("internal_id"))
+                    if act.get("internal_id") == stop.get("internal_id"):
+                        #print("----compare IDs: {0} ----".format(self.__debugging_counter))
+                        #print(act)
+                        #print(effect_bag)
+                        stop_next += 1
+
         return effect_bag
         
     def executeCommand(self, command):
@@ -158,8 +201,8 @@ class ActionProcessor:
     def currentTranscript(self):
         transcript = []
         for act in self.queue:
-            if not act is None:
-                transcript.append(translateActionDescription(act))
+            if act != None:
+                transcript.append(translateActionDescription(act, state=self.currentState(act)))
         return transcript
         
     def emitTranscript(self):
@@ -170,14 +213,16 @@ class ActionProcessor:
                 
 
 def expandTag(tag, actor, target):
-    if(isinstance(actor, int)):
-        print(actor)
-    if(isinstance(target, int)):
-        print(target)
-    tag = tag.replace("<ACTOR>", actor.getId())
-    tag = tag.replace("<TARGET>", target.getId())
-    tag = tag.replace("<ACTOR SHIP>", actor.ship_id)
-    tag = tag.replace("{TARGET SHIP}", target.ship_id)
+    #if(isinstance(actor, int)):
+    #    print(actor)
+    #if(isinstance(target, int)):
+    #    print(target)
+    if None != actor:
+        tag = tag.replace("<ACTOR>", actor.getId())
+        tag = tag.replace("<ACTOR SHIP>", actor.ship_id)
+    if None != target:
+        tag = tag.replace("<TARGET>", target.getId())
+        tag = tag.replace("<TARGET SHIP>", target.ship_id)
     return tag
     
 def expandTagFromState(tag, state):
@@ -195,6 +240,8 @@ def expandTagFromAction(tag, state):
     if state is None:
         return tag
     return expandTag(tag, state["action"][Cmd.current_actor], state["action"][Cmd.current_target])    
+
+explain_conflict = False
                
 class Conflict:
     def __init__(self, action_catalog, protagonist, antagonist, initial_state = None):
@@ -226,11 +273,13 @@ class Conflict:
         
     def performAction(self, actor, target, action):
         action.update({Cmd.current_actor: actor, Cmd.current_target: target})
-        print(action)
+        if explain_conflict:
+            print(action)
         self.action_processor.addAction(action)
         
     def addResolution(self, action):
-        print(action)
+        if explain_conflict:
+            print(action)
         self.action_processor.addAction(action)
         
     def currentParentState(self):
@@ -318,7 +367,8 @@ class Conflict:
             targeting = self.char_one
         next_action = self.pickNextAction(actor_num)
         if next_action is None:
-            print("No Action")
+            if explain_conflict:
+                print("No Action")
             return # todo: unwind to last branch
         self.performAction(acting, targeting, next_action)
         self.hideAction(next_action) # this action has been spent. 
@@ -390,20 +440,20 @@ def cmd_efx_resolve_conflict(actproc):
         
 def Fight(conflict):
     conflict.performNextAction(0)
-    print("---")
-    print(conflict.currentState())
-    print("===")
+    #print("---")
+    #print(conflict.currentState())
+    #print("===")
     conflict.performNextAction(1)
     #conflict.currentTranscript()
-    print("---")
-    print(conflict.currentState())
-    print("===")
+    #print("---")
+    #print(conflict.currentState())
+    #print("===")
     return
 
 def WeighAnchor(conflict):
     conflict.performActions()
-    print(conflict.currentState())
-    print("===")
+    #print(conflict.currentState())
+    #print("===")
     
 def is_ship(state):
     return state["actor"].isShip()
@@ -970,6 +1020,9 @@ def if_at_destination(state):
             curdest = tag
     if (None == curdest) or (None == curloc):
         return False    
+    #print("x=y?")
+    #print(curdest.split(":",maxsplit=1)[1])
+    #print(curloc.split(":",maxsplit=1)[1])
     return (curdest.split(":",maxsplit=1)[1] == curloc.split(":",maxsplit=1)[1])
     
 def not_at_destination(state):
@@ -980,6 +1033,9 @@ def if_destination_overseas(state):
     
 def if_voyaging(state):
     return is_tag_count_positive("voyaging <ACTOR SHIP>", state)
+    
+def not_voyaging(state):
+    return not if_voyaging(state)
 
 def if_voyaging_canceled(state):
     return is_tag_count_positive("voyaging canceled <ACTOR SHIP>", state)
@@ -993,9 +1049,15 @@ def not_in_harbor(state):
 def efx_voyage_begins(state):
     effects = state["tags"]
     # TODO: change these temporary tag injections to reflect the actual current state of the ship
-    effects = effects + collections.Counter([expandTagFromAction("destination <ACTOR SHIP>: NOMANISAN ISLAND", state)])
-    effects = effects + collections.Counter([expandTagFromAction("in harbor <ACTOR SHIP>", state)])
+    #effects = effects + collections.Counter([expandTagFromAction("in harbor <ACTOR SHIP>", state)])
     effects = effects + collections.Counter([expandTagFromAction("voyaging <ACTOR SHIP>", state)])
+    return effects         
+    
+def efx_temp_voyage_start(state):
+    effects = state["tags"]
+    # TODO: change these temporary tag injections to reflect the actual current state of the ship
+    effects = effects + collections.Counter([expandTagFromAction("in harbor <ACTOR SHIP>", state)])
+    #effects = effects + collections.Counter([expandTagFromAction("voyaging <ACTOR SHIP>", state)])
     return effects         
 
 def efx_leave_harbor(state):
@@ -1023,8 +1085,8 @@ def efx_move_location_destination(state):
     format. This swaps them out.
     """
     effects = state["tags"]
-    findloc = expandTagFromAction("location <ACTOR>", state)
-    finddest = expandTagFromAction("destination <ACTOR>", state)
+    findloc = expandTagFromAction("location <ACTOR SHIP>", state)
+    finddest = expandTagFromAction("destination <ACTOR SHIP>", state)
     curdest = None
     curloc = None
     for tag in effects:
@@ -1032,20 +1094,105 @@ def efx_move_location_destination(state):
             curloc = tag
         if finddest in tag:
             curdest = tag
-    if not curdest is None:
-        if not curloc is None:
+    if curdest != None:
+        #print("DEST " + str(curdest))
+        #print("LOC  " + str(curloc))
+        if curloc != None:
             effects[curloc] = 0
         newloc = curdest.split(":",maxsplit=1)[1]
-        effects.update(["{0}:{1}".format(expandTagFromAction("location <ACTOR>", state), newloc)])
+        effects.update(["{0}:{1}".format(expandTagFromAction("location <ACTOR SHIP>", state), newloc)])
+        #print(["{0}:{1}".format(expandTagFromAction("location <ACTOR>", state), newloc)])
+    
+    return effects
+
+def cmd_efx_end_mooring_ship(actproc):
+    charone = actproc().parent().char_one
+    chartwo = actproc().parent().char_two
+    transcript = actproc().emitTranscript()
+    tag_change = collections.Counter()
+    tag_change[expandTag("anchor aweigh <ACTOR SHIP>", charone, chartwo)] = -1
+    anchor_count = actproc().currentState().get(expandTag("anchors moored <ACTOR SHIP>", charone, chartwo))
+    #print(anchor_count)
+    tag_change[expandTag("anchors moored <ACTOR SHIP>", charone, chartwo)] = anchor_count
+    act = {Cmd.effects: [lambda state: state["tags"] + tag_change],
+           Cmd.action: transcript }
+    actproc().sendToParentConflict(act)    
+   
+def cmd_efx_set_random_destination(actproc):
+    actor = actproc().parent().char_one
+    target = actproc().parent().char_two
+    effects = actproc().currentState()
+    tag_change_plus = collections.Counter()
+    tag_change_minus = collections.Counter()
+    # clear destination...
+    finddest = expandTag("destination <ACTOR SHIP>", actor, target)
+    #print("finddest")
+    #print(finddest)
+    
+    for tag in effects:
+        if finddest in tag:
+            #print("change tag")
+            #print(tag)
+            tag_change_minus[tag] = 99
+    dest = places.getRandomDestination()
+    destination_id = "destination <ACTOR SHIP>: {0}".format(places.getPlaceId(dest))
+    tag_change_plus = tag_change_plus + collections.Counter([expandTag(destination_id, actor, target)])
+    tag_change_cp = copy.deepcopy(tag_change_plus)
+    act = {Cmd.effects: [lambda state: (state["tags"] - tag_change_minus) + tag_change_cp],
+           Cmd.action: "",
+           Cmd.injected: True}
+    #print("---act---")
+    #print(act)
+    actproc().addAction(act)
+    
+def cmd_efx_set_random_location(actproc):
+    actor = actproc().parent().char_one
+    target = actproc().parent().char_two
+    effects = actproc().currentState()
+    tag_change_plus = collections.Counter()
+    tag_change_minus = collections.Counter()
+    # clear destination...
+    finddest = expandTag("location <ACTOR SHIP>", actor, target)
+    #print("find_loc")
+    #print(finddest)
+    
+    for tag in effects:
+        if finddest in tag:
+            #print("change tag")
+            #print(tag)
+            tag_change_minus[tag] = 99
+    dest = places.getRandomDestination()
+    destination_id = "location <ACTOR SHIP>: {0}".format(places.getPlaceId(dest))
+    tag_change_plus = tag_change_plus + collections.Counter([expandTag(destination_id, actor, target)])
+    tag_change_cp = copy.deepcopy(tag_change_plus)
+    act = {Cmd.effects: [lambda state: (state["tags"] - tag_change_minus) + tag_change_cp],
+           Cmd.action: "",
+           Cmd.injected: True}
+    #print("---act---")
+    #print(act)
+    actproc().addAction(act)
+    
+def if_enough_anchors(state):
+    compare = compare_tag_count("mooring anchors needed <ACTOR SHIP>", "anchors moored <ACTOR SHIP>", state)
+    if None == compare:
+        return not is_tag_count_positive("mooring anchors needed <ACTOR SHIP>", state)
+    return (compare <= 0)
+
+def efx_temp_skip_weigh_anchor(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("anchor aweigh <ACTOR SHIP>", state)] = 1
+    effects[expandTagFromAction("anchors moored <ACTOR SHIP>", state)] = 0
     return effects
     
+# efx_set_random_destination, efx_clear_location, efx_set_random_location        
 # Voyage: Ship vs. the Sea
 actcat_ship_voyage = [
-{Cmd.prereq: [is_ship, if_no_destination], Cmd.effects: [efx_voyage_begins], Cmd.action: "<TEMP: RANDOM DESTINATION>"},
+{Cmd.prereq: [is_ship, not_voyaging, if_no_destination], Cmd.effects: [efx_temp_voyage_start], Cmd.command: [cmd_efx_set_random_location, cmd_efx_set_random_destination], Cmd.action: "<TEMP: RANDOM DESTINATION>"},
 # Start the voyage
-{Cmd.prereq: [is_ship, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "<VOYAGE: BEGIN_VOYAGE>"},
+{Cmd.prereq: [is_ship, not_voyaging, if_in_harbor, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "<VOYAGE: BEGIN_VOYAGE>"},
 # Weigh Anchor
-{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<VOYAGE: WEIGH ANCHOR><PAR>"},
+{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<PAR> <VOYAGE: WEIGH ANCHOR><PAR>"},
+#{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_temp_skip_weigh_anchor], Cmd.command: [], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<PAR> <VOYAGE: WEIGH ANCHOR><PAR>"},
 # Leave the harbor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "<VOYAGE: LEAVE HARBOR>"},
 # Sailing
@@ -1053,11 +1200,13 @@ actcat_ship_voyage = [
 # Perilous Journey
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "<VOYAGE: PERILS AT SEA>"},
 # Arrive at destination, enter harbor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<VOYAGE: ENTER HARBOR>"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<VOYAGE: ENTER HARBOR><PAR>They had arrived at <DESCRIBE: LOCATION NAME>.<PAR><DESCRIBE: LOCATION DESCRIPTION>"},
 # Drop anchor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [], Cmd.command: [cmd_efx_drop_anchor], Cmd.action: "<VOYAGE: DROP ANCHOR><PAR>"},
+#{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_drop_anchor], Cmd.command: [], Cmd.action: "<VOYAGE: DROP ANCHOR><PAR>"},
  # Voyage over
 {Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: END>"},
+{Cmd.prereq: [is_ship, not_voyaging, if_enough_anchors, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_begins], Cmd.command: [cmd_efx_set_random_destination], Cmd.action: "<VOYAGE: RESTART>"},
 {Cmd.prereq: [is_ship, if_voyaging, if_voyaging_canceled], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: CANCELED>"}
  ]
 
@@ -1088,12 +1237,6 @@ def if_dropping_anchor_end(state):
     if is_tag_count_positive("dropping anchor <ACTOR SHIP>", state):
         return is_tag_count_less_than("dropping anchor <ACTOR SHIP>", 3, state)
     
-def if_enough_anchors(state):
-    compare = compare_tag_count("mooring anchors needed <ACTOR SHIP>", "anchors moored <ACTOR SHIP>", state)
-    if None == compare:
-        return not is_tag_count_positive("mooring anchors needed <ACTOR SHIP>", state)
-    return (compare <= 0)
-
 def not_enough_anchors(state):
     return not if_enough_anchors(state)
     
