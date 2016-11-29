@@ -36,28 +36,28 @@ corpora_rules = {
 "wine_taste": pycorpora.foods.wine_descriptions.get("wine_descriptions"),
 "condiment": [c.lower() for c in pycorpora.foods.condiments.get("condiments")],
 "knot": pycorpora.technology.knots.get("knots"),
-"unusual_thing": ["<+feature gemstone>#gemstone</+>","<+feature fauna>#common_animal#</+>","<+feature fruit flora>#fruit#</+>","<+feature vegetable flora>#vegetable#</+>"],
-"a_kind_of" :["a kind of","a sort of","something resembling","what you might think of as a","something that is almost, but not entirely, unlike", "what some refer to as a", "what I would consider", "something that vaugely resembles", "a variety of", "a species of", "what some call", "something that resembles", "a local variant of", "what they refer to as","what they consider","a kind of","a local","a peculiar","what they call","a singular","a unique","a pungent","a strong","a thick","a bitter","a sweet","a variety of","something that resembles","something with the flavor of"],
+"unusual_thing": ["<+feature gemstone>#gemstone#</+>","<+feature fauna>#common_animal#</+>","<+feature fruit flora>#fruit#</+>","<+feature vegetable flora>#vegetable#</+>"],
+"a_kind_of" :["a kind of","a sort of","something resembling","what you might think of as a","something that is almost, but not entirely, unlike", "what some refer to as a", "what I would consider", "something that vaugely resembles", "a variety of", "a species of", "what some call", "something that resembles", "a local variant of", "what they refer to as","what they consider to be","a kind of","a local","a peculiar","what they call","a singular","a unique","a pungent","a strong","a thick","a bitter","a sweet","a variety of","something that resembles","something with the flavor of"],
 "heard_rumors_of":["heard could be found there","heard rumors of","once heard a tale about","heard tales they swore were true","once encountered before","remembered from past voyages","great expectations for","believed would be a sight worth seeing"],
 "sailors":["sailors","tars","pirates"],
 }
 
 #landscape
-island_desc_flora = ["There is a flower there, a species of <+feature flora flower>#flower# with #xkcd_color# petals</+>. "]
+island_desc_flora = ["There is a flower there, a species of <+feature flora flower>#flower# with #xkcd_color# petals</+>. ", "A flower grows on the island, <+feature flora flower>#flower.a# with #xkcd_color# petals</+>. "]
 island_desc_fauna = ["That place is known for a rare kind of <+feature fauna>#xkcd_color# #common_animal#</+>.","The #sailors# were eager #to_hunt# the <+feature fauna>#common_animal#</+>, which they had #heard_rumors_of#."]
-island_desc_rumors_and_legends = ["Whenever they visit this island, #sailors# will conduct a kind of ritual, which they claim symbolizes <+feature ritual>#ritual_meaning#</+>.","The #sailors# told the stories of #unusual_thing.a# they had #heard_rumors_of#."]
+island_desc_rumors_and_legends = ["Whenever they visit this island, #sailors# will conduct a kind of ritual, which they claim symbolizes <+feature ritual>#ritual_meaning#</+>.","The #sailors# told stories of #unusual_thing.a# from the island, which they #heard_rumors_of#."]
 #cuisine
-island_desc_condiment = ["The inhabitants use #a_kind_of# <+feature condiment>#condiment#</+> in their cooking.", "The food of that island is characterized by #a_kind_of# <+feature condiment>#condiment#</+>.","They have #a_kind_of# <+feature condiment>#condiment# made from the #fruit#</+> of that island.","Their cooking is characterized by <+feature condiment>#condiment# with #wine_taste.a# flavor</+>.","The cuisine of that island is known for #a_kind_of# <+feature condiment>#wine_taste# #condiment#</+>."]
+island_desc_condiment = ["The inhabitants use #a_kind_of# <+feature condiment>#condiment#</+> in their cooking.", "The food of that island is characterized by #a_kind_of# <+feature condiment>#condiment#</+>.","The inhabitants have #a_kind_of# <+feature condiment>#condiment# made from the #fruit#</+> of that island.","The inhabitants' cooking is characterized by <+feature condiment>#condiment# with #wine_taste.a# flavor</+>.","The cuisine of that island is known for #a_kind_of# <+feature condiment>#wine_taste# #condiment#</+>."]
 #domestication
 island_desc_domestication = ["The inhabitants raise #common_animal.s#, #animal_use#."]
 
 
 island_desc_shape = [
-"<+feature size=small></+>This little island was of a triangular shape, and each side of it a mile long; it was surrounded by a coral reef which, as usual, presented a beautiful piece of marine scenery.",
-"<+feature size=tiny></+>The island was quite small, composed of <+feature landscape>rocks</+>, which rose sixty or eighty feet above the water, and was crowned with pleasant <+feature flora>shrubbery</+>. It had a wing extending out fifty feet or more, which was about thirty feet high, and through this there was a natural tunnel, having much the appearance of an artificial <+feature landscape>arch of stone</+>, and apparently large enough to allow a common-sized boat to pass.",
-"<+feature size=medium></+>Those who for the first time visit the #ocean_sea_name#, generally are surprised at the appearance of the islands when beheld from the sea. From the vague accounts we sometimes have of their beauty, many people are apt to picture to themselves enamelled and softly swelling plains, shaded over with delicious groves, and watered by purling brooks, and the entire country but little elevated above the surrounding ocean. The reality is very different; bold rock-bound coasts, with the surf beating high against the lofty <+feature landscape>cliffs</+>, and broken here and there into deep <+feature landscape>inlets</+>, which open to the view thickly-wooded <+feature landscape>valleys</+>, separated by the spurs of <+feature landscape>mountains</+> clothed with tufted grass, and sweeping down towards the sea from an elevated and furrowed interior, form the principal features of these islands.",
-"<+feature size=small></+>There were two islands there. The distance from one to the other was about one mile. The small island rose very abruptly many hundred feet above the sea. At the top was <+feature landmark>a rock with a conical form, which eternally seems on the point of rolling down with a tremendous crash into the sea</+>. The other island was larger, if less remarkable.",
-"<+feature size=medium></+>The newly discovered land was perceived to consist of a flat island fifteen leagues in length, <+feature no_hills no_mountains>without any hills</+>, all covered with <+feature landscape flora>trees</>, and having <+feature landmark>a great lake in the middle</+>.",
+"<+feature do_not_repeat></+><+feature size=small></+>This little island was of a triangular shape, and each side of it a mile long; it was surrounded by a coral reef which, as usual, presented a beautiful piece of marine scenery.",
+"<+feature do_not_repeat></+><+feature size=tiny></+>The island was quite small, composed of <+feature landscape>rocks</+>, which rose sixty or eighty feet above the water, and was crowned with pleasant <+feature flora>shrubbery</+>. It had a wing extending out fifty feet or more, which was about thirty feet high, and through this there was a natural tunnel, having much the appearance of an artificial <+feature landscape>arch of stone</+>, and apparently large enough to allow a common-sized boat to pass.",
+"<+feature do_not_repeat></+><+feature size=medium></+>Those who for the first time visit the #ocean_sea_name#, generally are surprised at the appearance of the islands when beheld from the sea. From the vague accounts we sometimes have of their beauty, many people are apt to picture to themselves enamelled and softly swelling plains, shaded over with delicious groves, and watered by purling brooks, and the entire country but little elevated above the surrounding ocean. The reality is very different; bold rock-bound coasts, with the surf beating high against the lofty <+feature landscape>cliffs</+>, and broken here and there into deep <+feature landscape>inlets</+>, which open to the view thickly-wooded <+feature landscape>valleys</+>, separated by the spurs of <+feature landscape>mountains</+> clothed with tufted grass, and sweeping down towards the sea from an elevated and furrowed interior, form the principal features of these islands.",
+"<+feature do_not_repeat></+><+feature size=small></+>There were two islands there. The distance from one to the other was about one mile. The small island rose very abruptly many hundred feet above the sea. At the top was <+feature landmark>a rock with a conical form, which eternally seems on the point of rolling down with a tremendous crash into the sea</+>. The other island was larger, if less remarkable.",
+"<+feature do_not_repeat></+><+feature size=medium></+>The newly discovered land was perceived to consist of a flat island fifteen leagues in length, <+feature no_hills no_mountains>without any hills</+>, all covered with <+feature landscape flora>trees</>, and having <+feature landmark>a great lake in the middle</+>.",
 ]
 
 island_desc_no_inhabitants = ["<+feature no_inhabitants></+>There did not appear to be any fixed inhabitants; but proofs of the island having been visited some months before, were numerous; and upon the larger island there was a smoke."]
@@ -83,10 +83,10 @@ island_landing = [
 "They continued sailing along with a fair wind and fine weather. "
 
 island_history = [
-"<+feature size=large></+>This <+feature kingdom>kingdom</+> is on a large island, extending from east to west five hundred miles, and from north to south three hundred. Left and right from it there are as many as one hundred small islands, distant from one another ten, twenty, or even two hundred miles; but all subject to the large island. Most of them produce <+feature gemstones>pearls</+> and <+feature gemstones>precious stones of various kinds</+>; there is one which produces the pure and brilliant pearl--an island which would form a square of about three miles. The king employs <+feature inhabitants>men</+> to watch and protect it, and requires three out of every ten pearls which the collectors find.",
-"The country originally had no human inhabitants, but was occupied only by spirits and <+feature monsters>nagas</+>, with which merchants of various countries carried on a trade. When the trafficking was taking place, the spirits did not show themselves. They simply set forth their precious commodities, with labels of the price attached to them; while the merchants made their purchases according to the price; and took the things away. Through the coming and going of the merchants in this way, when they went away, the people of their various countries heard how pleasant the land was, and flocked to it in numbers till it became a great nation. The climate is temperate and attractive, without any difference of summer and winter. The <+feature landscape flora>vegetation</+> is always luxuriant. Cultivation proceeds whenever men think fit: there are no fixed seasons for it.",
-"This island had <+feature no_inhabitants>no human inhabitants</+>, but was occupied only by spirits and <+feature monsters>nagas</+>, with which merchants of various countries carried on a trade. When the trafficking was taking place, the spirits did not show themselves. They simply set forth their precious commodities, with labels of the price attached to them; while the merchants made their purchases according to the price; and took the things away. ",
-"Through the many visits of merchants to the island, the people of their various countries heard how pleasant the land was, and <+feature inhabitants>flocked to it in numbers</+> till it became a great nation. The climate is temperate and attractive, without any difference of summer and winter. The <+feature landscape flora>vegetation</+> is always luxuriant. Cultivation proceeds whenever men think fit: there are no fixed seasons for it.",
+"<+feature do_not_repeat></+><+feature size=large></+>This <+feature kingdom>kingdom</+> is on a large island, extending from east to west five hundred miles, and from north to south three hundred. Left and right from it there are as many as one hundred small islands, distant from one another ten, twenty, or even two hundred miles; but all subject to the large island. Most of them produce <+feature gemstones>pearls</+> and <+feature gemstones>precious stones of various kinds</+>; there is one which produces the pure and brilliant pearl--an island which would form a square of about three miles. The king employs <+feature inhabitants>men</+> to watch and protect it, and requires three out of every ten pearls which the collectors find.",
+"<+feature do_not_repeat></+>The country originally had no human inhabitants, but was occupied only by spirits and <+feature monsters>nagas</+>, with which merchants of various countries carried on a trade. When the trafficking was taking place, the spirits did not show themselves. They simply set forth their precious commodities, with labels of the price attached to them; while the merchants made their purchases according to the price; and took the things away. Through the coming and going of the merchants in this way, when they went away, the people of their various countries heard how pleasant the land was, and flocked to it in numbers till it became a great nation. The climate is temperate and attractive, without any difference of summer and winter. The <+feature landscape flora>vegetation</+> is always luxuriant. Cultivation proceeds whenever men think fit: there are no fixed seasons for it.",
+"<+feature do_not_repeat></+>This island had <+feature no_inhabitants>no human inhabitants</+>, but was occupied only by spirits and <+feature monsters>nagas</+>, with which merchants of various countries carried on a trade. When the trafficking was taking place, the spirits did not show themselves. They simply set forth their precious commodities, with labels of the price attached to them; while the merchants made their purchases according to the price; and took the things away. ",
+"<+feature do_not_repeat></+>Through the many visits of merchants to the island, the people of their various countries heard how pleasant the land was, and <+feature inhabitants>flocked to it in numbers</+> till it became a <+feature populus>great nation</+>. The climate is <+feature climate_even>temperate and attractive</+>, without any difference of summer and winter. The <+feature landscape flora>vegetation</+> is always luxuriant. Cultivation proceeds whenever men think fit: there are no fixed seasons for it.",
 ]
 
 
@@ -109,7 +109,7 @@ island_content = [
 {"tags":["inhabitants","cuisine"],"importance": 5,"content": island_desc_condiment},
 {"tags":["inhabitants","fauna"],  "importance": 5,"content": island_desc_domestication},
 {"tags":["shape"],              "importance": 9,"content": island_desc_shape},
-{"tags":["landscape"],          "importance": 9,"content": island_desc_soil},
+{"tags":["landscape"],          "importance": 8,"content": island_desc_soil},
 {"tags":["history"],            "importance": 1,"content": island_history},
 {"tags":["no_inhabitants"],     "importance": 6,"content": island_desc_no_inhabitants},
 #{"tags":[],                     "importance": 0,"content": []},
@@ -188,8 +188,14 @@ def harvestTagsFromDescription(description):
     tags = [translateMarkupToTag(t.group()) for t in re.finditer("<\+feature .*?>.*?</\+>", description)]
     return tags
     
+do_not_repeat = set()
+    
 def getIslandContent():
     content_records = expandDescriptionRecords(island_content)
+    global do_not_repeat
+    for cr in content_records:
+        if "do_not_repeat" in cr["flat_tags"]:
+            do_not_repeat = do_not_repeat.union(set([i for i in cr["flat_tags"] if "id_" in i]))
     return content_records
     
 
@@ -253,6 +259,8 @@ def compareTags(current_tags, new_tags):
     """
     Returns True if there is no conflict between the two lists of tags.
     """
+    if len(do_not_repeat.intersection(set([i for i in new_tags if "id_" in i]))) > 0:
+        return False # new item is on the do-not-repeat list
     return (compareTagsOneWay(current_tags, new_tags)) and (compareTagsOneWay(new_tags, current_tags))    
     
 #################################    
@@ -310,11 +318,11 @@ def generateDescription(island, content):
     ctags = flattenIslandTags(island["description"])
     island["tags"] = ctags
     #print(ctags)
-    print("==^==")
+    #print("==^==")
     if len(content) <= 0:
         return island
     valid_content = [i for i in content if compareTags(ctags, flattenContentTags(i["tags"]))]
-    print(len(valid_content))
+    #print(len(valid_content))
     if len(valid_content) <= 0:
         return generateDescription(island, []) # get final ctags
     #print(valid_content)
@@ -324,30 +332,57 @@ def generateDescription(island, content):
     
     return island
 
+def generateIslandName(island):
+    name = island_grammar.flatten("The #crayola_color# Isle of #greek_titans.capitalize#")
+    return name
+    
 def generateIsland():
     island = {"description":[], "name":"", "tags":[], "arrival":[]}
     content = getIslandContent()
-    for i in range(5):
+    for i in range(6):
         island = generateDescription(island, content)
+        island["name"] = generateIslandName(island)
     return island
     
 def describeIsland(island):
     desc = ""
-    {[]}
-    sort_desc = sorted(island["description"], key=lambda i: i.get("importance"), reverse=True)
+    para_breaks = [{"tags":[],"importance":2, "content":"<PAR>"},{"tags":[],"importance":6, "content":"<PAR>"},{"tags":[],"importance":4, "content":"<PAR>"},{"tags":[],"importance":8, "content":"<PAR>"}]
+    sort_desc = sorted(island["description"] + para_breaks, key=lambda i: i.get("importance"), reverse=True)
     for i in sort_desc:
         desc = desc + i["content"] + " "
-    return desc
+    desc = desc.replace("  "," ")
+    desc = re.sub(" ?<PAR> ?", "<PAR>", desc)
+    desc = re.sub("<\+feature.*?>", "", desc)
+    desc = re.sub("</\+>", "", desc)
+    return desc 
     
     
-put_island_content = getIslandContent()
+#put_island_content = getIslandContent()
 print("\n____...ttt^ttt...____\n")
-il = generateIsland()
-print(describeIsland(il))
-print(il["tags"])
+#il = generateIsland()
+#print(describeIsland(il))
+#print(il["tags"])
 
 #print(expandDescriptionRecords(island_content))
 #for i in expandDescriptionRecords(island_content):
 #    #print("")
 #    #print(i)
 #    print(flattenTags(i))
+
+_master_tag_list = []
+
+def masterTagList(islands):
+    global _master_tag_list
+    _master_tag_list = list(itertools.chain.from_iterable([i["tags"] for i in islands]))
+    return _master_tag_list
+
+def generateArchipegalo():
+    global _master_tag_list 
+    _master_tag_list = []
+    islands = []
+    for i in range(25):
+        islands.append(generateIsland())
+        masterTagList(islands)
+    return islands
+    
+#archi = generateArchipegalo()

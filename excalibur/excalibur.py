@@ -4,7 +4,9 @@ import character
 import action_commands
 import transcript
 import book
+import places
 
+archipegalo = places.generateArchipegalo() 
 protagonist = character.generatePirateShip()
 antagonist = character.generateTheSea()
 con = action_commands.Conflict(action_commands.actcat_ship_voyage, protagonist, antagonist)
