@@ -28,7 +28,7 @@ def filterBadWords(text):
     #text.replace()
     return text # TODO
 
-naughty_words_list = ["shit","crap","poop","piss"]
+naughty_words_list = ["shit","crap","poop","piss","cat pee","pee"]
 
 def filterNaughtyWords(text):
     if not isinstance(text, str):

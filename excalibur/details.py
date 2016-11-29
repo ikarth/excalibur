@@ -9,7 +9,7 @@ shanties = [{"chorus":"""
    #verse#  
    #verse#  
    #verse#  
-   Early in the morning?  
+   Early in the morning  
    Hooray and up she rises,  
    Hooray and up she rises,  
    Hooray and up she rises  
@@ -151,7 +151,9 @@ def singShantyVerseCallAndResponse(shanty, verseno):
 
 def singShantySubset(shanty):
     verses = len(shanty["verse"])
+    verses = min(verses, 2)
     singing_verses = numpy.random.choice(range(verses), size=numpy.random.randint(0, verses),replace=False)
+    
     output = "\n"
     output += singShantyVerse(shanty, 0)
     for v in singing_verses:

@@ -1,4 +1,4 @@
-badwords filter
+~badwords filter~
 swerving with word2vec
 Conflict: ship is aground
 Conflict: Sea battles
@@ -9,7 +9,6 @@ Handle actor-state changes
 Move name injection to the template level
 Add UUID to conflict state tags
 Pirate description generator
-Island generator
+~Island generator~
 - Hook island generator up to voyage conflict loop
-
 Plot generator

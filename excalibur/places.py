@@ -9,6 +9,8 @@ import re
 import numpy.random
 import badwords
 import copy
+from uuid import uuid4
+import uuid
 
 #
 # Island Description Text
@@ -337,7 +339,7 @@ def generateIslandName(island):
     return name
     
 def generateIsland():
-    island = {"description":[], "name":"", "tags":[], "arrival":[]}
+    island = {"description":[], "name":"", "tags":[], "arrival":[], "uuid": uuid4()}
     content = getIslandContent()
     for i in range(6):
         island = generateDescription(island, content)
@@ -345,6 +347,8 @@ def generateIsland():
     return island
     
 def describeIsland(island):
+    if None == island:
+        return None
     desc = ""
     para_breaks = [{"tags":[],"importance":2, "content":"<PAR>"},{"tags":[],"importance":6, "content":"<PAR>"},{"tags":[],"importance":4, "content":"<PAR>"},{"tags":[],"importance":8, "content":"<PAR>"}]
     sort_desc = sorted(island["description"] + para_breaks, key=lambda i: i.get("importance"), reverse=True)
@@ -384,5 +388,49 @@ def generateArchipegalo():
         islands.append(generateIsland())
         masterTagList(islands)
     return islands
+
+####################################################
+
+#
+# Public Interface
+#
     
-#archi = generateArchipegalo()
+archipegalo = generateArchipegalo() 
+
+def getArchipegalo():
+    global archipegalo
+    if archipegalo == None:
+        archipegalo = generateArchipegalo() 
+    return archipegalo
+    
+def getRandomDestination():
+    return numpy.random.choice(getArchipegalo())
+    
+def getPlaceId(place):
+    #print("===id===")
+    #print(place.get("uuid"))
+    return place.get("uuid")
+
+
+    
+def findPlaceById(place_id):
+    #print("---find---")
+    #print(place_id)
+    if place_id == None:
+        return None
+    result = [x for x in getArchipegalo() if uuid.UUID(hex=place_id) == x.get("uuid")][0]
+    #print(result)
+    if result == []:
+        return None
+    
+    return result
+    
+def getPlaceName(place):
+    if None == place:
+        return None
+    return str(place.get("name"))# + str( place.get("uuid"))
+    
+def getPlaceDescription(place):
+    if None == place:
+        return None
+    return describeIsland(place)
