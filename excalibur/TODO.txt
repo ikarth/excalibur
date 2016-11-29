@@ -1,0 +1,15 @@
+badwords filter
+swerving with word2vec
+Conflict: ship is aground
+Conflict: Sea battles
+Conflict: Boarding ships 
+Integrate recruiting swordfights
+Less repetition on "sailors"
+Handle actor-state changes
+Move name injection to the template level
+Add UUID to conflict state tags
+Pirate description generator
+Island generator
+- Hook island generator up to voyage conflict loop
+
+Plot generator
