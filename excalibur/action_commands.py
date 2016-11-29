@@ -13,6 +13,7 @@ import tracery
 import uuid
 import weakref
 import copy
+import traceback
 
 # For debugging...
 from IPython.utils import coloransi
@@ -59,6 +60,7 @@ def buildTranslationTable(actor, target):
     ttable.append(["<TARGET_ATTRIBUTE>", "strength"])
     ttable.append(["<ACTOR_WEAPON_SOUND>", "clank"])
     ttable.append(["<ANTAGONIST_ARMOR>", "leather cap"])
+    return ttable
         
     
 
@@ -76,8 +78,9 @@ def translateActionDescription(action, specific_item = None):
             return action_string # TODO: handle nested transcriptions
     if (not isinstance(action_string, str)) or (not (hasattr(action_string, "replace"))):
         if isinstance(action_string, collections.Iterable):
-            for asi in action_string:
-                return translateActionDescription(action, asi)
+            asi = numpy.random.choice(action_string) # TODO: make determanistic
+            #for asi in action_string:
+            return translateActionDescription(action, asi)
         else:
             return action_string
     ttable = buildTranslationTable(actor, target)
@@ -263,10 +266,15 @@ class Conflict:
     def outputTranscript(self):
         return self.action_processor.emitTranscript()
         
-    def prereqCheck(self, action, actor, target):
+    def prereqCheck(self, action, actor, target, explain=False):
+        if self.resolved:
+            return False
         if Cmd.prereq in action:
             for pre in action[Cmd.prereq]:
-                if not pre({"conflict":weakref.ref(self), "actor": actor, "target": target}):
+                pre_state = pre({"conflict":weakref.ref(self), "actor": actor, "target": target})
+                if explain:
+                    print("{0}: {2}\t{1}".format(pre_state, str(pre), str(pre.__name__)))
+                if not pre_state:
                     return False
         return True
         
@@ -315,6 +323,17 @@ class Conflict:
         self.performAction(acting, targeting, next_action)
         self.hideAction(next_action) # this action has been spent. 
         # Remove it from consideration until later...
+        
+    def debugNextAction(self, actor_num):
+        print(self.currentState())
+        acting = self.char_one
+        targeting = self.char_two
+        if actor_num != 1:
+            acting = self.char_two
+            targeting = self.char_one
+        for act in self.deck_of_actions:
+            self.prereqCheck(act, acting, targeting, explain=True)
+        
         
     def performChildActions(self):
         if len(self._sub_conflicts) <= 0:
@@ -391,6 +410,19 @@ def is_ship(state):
     
 def is_sea(state):
     return state["actor"].isSea()
+
+def if_crew_busy(state):
+    return False # TODO: properly detect if the crew is already engaged in doing something else (such as firing the canons)
+    
+def not_crew_busy(state):
+    return not if_crew_busy(state)
+
+    
+def if_rushed_for_time(state):
+    return False # TODO: properly detect if we're rushed for time, i.e. under fire, in a storm, etc.
+    
+def not_rushed_for_time(state):
+    return not if_rushed_for_time(state)
         
 def in_combat(state):
     cur_tags = getCurState(state)
@@ -446,7 +478,21 @@ def can_parry(state):
 def is_tag_count_positive(tag, state):
     cur_tags = getCurState(state)
     if (expandTagFromState(tag, state) in cur_tags):
-        return cur_tags[expandTagFromState(tag, state)] > 0
+        if cur_tags[expandTagFromState(tag, state)] > 0:
+            return True
+    return False
+        
+def compare_tag_count(tag1, tag2, state):
+    cur_tags = getCurState(state)
+    if (expandTagFromState(tag1, state) in cur_tags):
+        if (expandTagFromState(tag2, state) in cur_tags):
+            one = cur_tags[expandTagFromState(tag1, state)]
+            two = cur_tags[expandTagFromState(tag2, state)]
+            if None == one:
+                one = 0
+            if None == two:
+                two = 0
+            return one - two
 
 def is_staggered_actor(state):
     return is_tag_count_positive("staggered <ACTOR>", state)
@@ -842,7 +888,10 @@ def cmd_efx_anchor_aweigh(actproc):
     charone = actproc().parent().char_one
     chartwo = actproc().parent().char_two
     transcript = actproc().emitTranscript()
-    act = {Cmd.effects: [lambda state: state["tags"] + collections.Counter([expandTag("anchor aweigh <ACTOR SHIP>", charone, chartwo)])],
+    tag_change = collections.Counter([expandTag("anchor aweigh <ACTOR SHIP>", charone, chartwo)])
+    tag_change[expandTag("anchors moored <ACTOR SHIP>", charone, chartwo)] = -9 # TODO: Updated weighing anchor to take into account multiple mooring anchors
+    #print(anchor_count)
+    act = {Cmd.effects: [lambda state: state["tags"] + tag_change],
            Cmd.action: transcript }
     actproc().sendToParentConflict(act)
 
@@ -856,6 +905,7 @@ weigh_anchor_actcat = [
 # clear the deck, make ready
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The order was given, and soon the messenger was run out and the capstan manned."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The capstan was made ready. The bars unstowed, the #sailors# took up the preparation of unmooring the #ship#."},
 # capstan bars fitted to capstan
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember> fitted the bars, and the #sailors# took their positions around the capstan."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember> took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
@@ -884,6 +934,14 @@ def cmd_efx_weigh_anchor(actproc):
     actor = actproc().parent().char_one
     target = actproc().parent().char_two
     subconflict = Conflict(weigh_anchor_actcat, actor, target, [expandTag("weighing anchor <ACTOR SHIP>", actor, target), expandTag("begin weighing anchor <ACTOR SHIP>", actor, target)])
+    actproc().parent().spawnSubconflict(subconflict)
+    return # TODO
+    
+def cmd_efx_drop_anchor(actproc):
+    actor = actproc().parent().char_one
+    target = actproc().parent().char_two
+    # TODO: check harbor conditions to see how many mooring anchors should be dropped
+    subconflict = Conflict(actcat_ship_drop_anchor, actor, target, [expandTag("mooring ship <ACTOR SHIP>", actor, target), expandTag("mooring anchors needed <ACTOR SHIP>", actor, target), expandTag("mooring anchors needed <ACTOR SHIP>", actor, target)])
     actproc().parent().spawnSubconflict(subconflict)
     return # TODO
 
@@ -922,6 +980,9 @@ def if_destination_overseas(state):
     
 def if_voyaging(state):
     return is_tag_count_positive("voyaging <ACTOR SHIP>", state)
+
+def if_voyaging_canceled(state):
+    return is_tag_count_positive("voyaging canceled <ACTOR SHIP>", state)
     
 def if_in_harbor(state):
     return is_tag_count_positive("in harbor <ACTOR SHIP>", state)
@@ -984,7 +1045,7 @@ actcat_ship_voyage = [
 # Start the voyage
 {Cmd.prereq: [is_ship, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "<VOYAGE: BEGIN_VOYAGE>"},
 # Weigh Anchor
-{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<VOYAGE: WEIGH ANCHOR>"},
+{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<VOYAGE: WEIGH ANCHOR><PAR>"},
 # Leave the harbor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "<VOYAGE: LEAVE HARBOR>"},
 # Sailing
@@ -994,13 +1055,181 @@ actcat_ship_voyage = [
 # Arrive at destination, enter harbor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<VOYAGE: ENTER HARBOR>"},
 # Drop anchor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_drop_anchor], Cmd.action: "<VOYAGE: DROP ANCHOR>"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [], Cmd.command: [cmd_efx_drop_anchor], Cmd.action: "<VOYAGE: DROP ANCHOR><PAR>"},
  # Voyage over
-{Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: END>"}
+{Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: END>"},
+{Cmd.prereq: [is_ship, if_voyaging, if_voyaging_canceled], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: CANCELED>"}
  ]
 
 actcat_ship_leave_port = []
 #The anchor catted, and the mainsail unfurled, they stood out for the open before a gentle breeze, without interference from the fort.
+
+actcat_ship_arrive_port = []
+
+def if_mooring_ship(state):
+    return is_tag_count_positive("mooring ship <ACTOR SHIP>", state)
+
+def if_begin_mooring(state):
+    return is_tag_count_positive("begin mooring <ACTOR SHIP>", state)
+    
+def not_begin_mooring(state):
+    return not is_tag_count_positive("begin mooring <ACTOR SHIP>", state)
+
+def if_dropping_anchor(state):
+    return is_tag_count_positive("dropping anchor <ACTOR SHIP>", state)
+    
+def not_dropping_anchor(state):
+    return not if_dropping_anchor(state)
+    
+def if_dropping_anchor_middle(state):
+    return is_tag_count_greater_than("dropping anchor <ACTOR SHIP>", 2, state)
+
+def if_dropping_anchor_end(state):
+    if is_tag_count_positive("dropping anchor <ACTOR SHIP>", state):
+        return is_tag_count_less_than("dropping anchor <ACTOR SHIP>", 3, state)
+    
+def if_enough_anchors(state):
+    compare = compare_tag_count("mooring anchors needed <ACTOR SHIP>", "anchors moored <ACTOR SHIP>", state)
+    if None == compare:
+        return not is_tag_count_positive("mooring anchors needed <ACTOR SHIP>", state)
+    return (compare <= 0)
+
+def not_enough_anchors(state):
+    return not if_enough_anchors(state)
+    
+def if_can_drop_anchor(state):
+    if is_tag_count_positive("anchor close <ACTOR SHIP>", state):
+        return False
+    return True # TODO: get harbor conditions
+
+def not_can_drop_anchor(state):
+    return not if_can_drop_anchor(state)
+    
+def efx_begin_mooring(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("begin mooring <ACTOR SHIP>", state)] = 1
+    effects[expandTagFromAction("mooring anchors needed <ACTOR SHIP>", state)] = 2 # TODO: set in conflict above, based on conditions...
+    effects[expandTagFromAction("anchors moored <ACTOR SHIP>", state)] = 0
+    effects[expandTagFromAction("dropping anchor <ACTOR SHIP>", state)] = 0
+    return effects
+    
+def efx_end_mooring(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("begin mooring <ACTOR SHIP>", state)] = 0
+    effects[expandTagFromAction("mooring anchors needed <ACTOR SHIP>", state)] = 0
+    effects[expandTagFromAction("dropping anchor <ACTOR SHIP>", state)] = 0
+    return effects
+
+
+#def efx_begin_dropping_anchor(state):
+#    effects = state["tags"]
+#    effects[expandTagFromAction("dropping anchor <ACTOR SHIP>", state)] = 3
+#    return effects
+    
+def efx_dropping_anchor(state):
+    effects = state["tags"]
+    anchor_drop_state = effects.get(expandTagFromAction("dropping anchor <ACTOR SHIP>", state))
+    #print("")
+    #traceback.print_stack(file=sys.stdout)
+    #print(state)
+    #print("anchor_drop_state: {0}".format(anchor_drop_state))
+    if None == anchor_drop_state or anchor_drop_state <= 0:
+        effects[expandTagFromAction("dropping anchor <ACTOR SHIP>", state)] = 3 # Can be increased for more description of readying the anchor...
+        return effects
+    else:
+        effects.subtract([expandTagFromAction("dropping anchor <ACTOR SHIP>", state)])
+    anchor_drop_state = effects.get(expandTagFromAction("dropping anchor <ACTOR SHIP>", state))
+    if anchor_drop_state == 1:
+        effects.update([expandTagFromAction("anchors moored <ACTOR SHIP>", state)])
+        effects[expandTagFromAction("anchor aweigh <ACTOR SHIP>", state)] = 0
+        effects[expandTagFromAction("anchor close <ACTOR SHIP>", state)] = 3
+        effects[expandTagFromAction("dropping anchor <ACTOR SHIP>", state)] = 0
+    return effects
+    
+def efx_drift_ship(state):
+    effects = state["tags"]
+    effects.subtract([expandTagFromAction("anchor close <ACTOR SHIP>", state)])
+    # TODO: perform ship drifting...probably as its own action catalog
+    return effects
+    
+def efx_pull_ship(state):
+    effects = state["tags"]
+    # TODO: use the capstan to move the ship
+    return effects
+
+def efx_test_mooring(state):
+    effects = state["tags"]
+    effects[expandTagFromAction("anchor aweigh <ACTOR SHIP>", state)] = 1
+    effects[expandTagFromAction("mooring ship <ACTOR SHIP>", state)] = 1
+    return effects
+    
+def cmd_efx_end_mooring_ship(actproc):
+    charone = actproc().parent().char_one
+    chartwo = actproc().parent().char_two
+    transcript = actproc().emitTranscript()
+    tag_change = collections.Counter()
+    tag_change[expandTag("anchor aweigh <ACTOR SHIP>", charone, chartwo)] = -1
+    anchor_count = actproc().currentState().get(expandTag("anchors moored <ACTOR SHIP>", charone, chartwo))
+    #print(anchor_count)
+    tag_change[expandTag("anchors moored <ACTOR SHIP>", charone, chartwo)] = anchor_count
+    act = {Cmd.effects: [lambda state: state["tags"] + tag_change],
+           Cmd.action: transcript }
+    actproc().sendToParentConflict(act)
+
+def cmd_efx_start_drift(actproc):
+    actor = actproc().parent().char_one
+    target = actproc().parent().char_two
+    subconflict = Conflict(actcat_ship_drift, actor, target, [expandTag("ship drifting <ACTOR SHIP>", actor, target)])
+    actproc().parent().spawnSubconflict(subconflict)
+    return # TODO    
+
+        
+actcat_ship_drop_anchor = [
+#{Cmd.prereq: [is_ship, not_anchor_aweigh, not_begin_mooring], Cmd.effects: [efx_test_mooring], Cmd.action: "TEST"},                           
+{Cmd.prereq: [is_ship, if_anchor_aweigh, if_mooring_ship, not_begin_mooring], Cmd.effects: [efx_begin_mooring], Cmd.action: ["<crewmember> was sent below to fetch the hawser.", "<crewmember> and <crewmember2> were sent below to fetch the hawser.","The #sailors# prepared to moor the #ship#.","The #ship# was made ready for the mooring.","<THE CAPTAIN> gave the order to moor the ship."]},
+{Cmd.prereq: [is_ship, if_mooring_ship, if_begin_mooring, if_enough_anchors], Cmd.effects: [], Cmd.command: [cmd_efx_end_mooring_ship, cmd_efx_resolve_conflict], Cmd.action: "<PAR><MOORING SHIP: END>"},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#."]},
+{Cmd.prereq: [is_ship, if_mooring_ship, if_dropping_anchor_middle, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["<crewmember> attached the anchor bouy.","The #sailors# took care to stand free of the cable.",""]},
+{Cmd.prereq: [is_ship, if_mooring_ship, if_dropping_anchor_end, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["Then they let fall the anchor, and it entered the water with a spash.", "The anchor was dropped with a splash.","The anchor was dropped, the cable playing out behind it.","\"Anchor away!\" and down it went.", "Down went the anchor, up spashed the spray.", "The stopper rope released, the anchor dropped."]},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, not_can_drop_anchor, if_begin_mooring, not_enough_anchors, not_rushed_for_time], Cmd.effects: [], Cmd.command: [cmd_efx_start_drift], Cmd.action: ["<PAR>The first anchor secure, the crew made ready to release the second, once the winds and tides had done their work.","<PAR>With one anchor in place, <THE CAPTAIN> judged it sufficent to wait for the ship to drift into position."]},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, not_can_drop_anchor, if_begin_mooring, not_enough_anchors, if_rushed_for_time, not_crew_busy], Cmd.effects: [efx_pull_ship], Cmd.action: "<NEED TO MOVE SHIP TO BE ABLE TO DROP THE NEXT ANCHOR: USE THE CAPSTAN>"},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, not_can_drop_anchor, if_begin_mooring, not_enough_anchors, if_rushed_for_time, not_crew_busy], Cmd.effects: [efx_pull_ship], Cmd.action: "<NEED TO MOVE SHIP TO BE ABLE TO DROP THE NEXT ANCHOR: USE THE CAPSTAN>"}, 
+]
+
+
+def cmd_efx_end_drift(actproc):
+    charone = actproc().parent().char_one
+    chartwo = actproc().parent().char_two
+    transcript = actproc().emitTranscript()
+    tag_change = collections.Counter()
+    tag_change[expandTag("anchor close <ACTOR SHIP>", charone, chartwo)] = -9
+    act = {Cmd.effects: [lambda state: state["tags"] + tag_change],
+           Cmd.action: transcript }
+    actproc().sendToParentConflict(act)
+
+def if_drifting(state):
+    return is_tag_count_positive("ship drifting <ACTOR SHIP>", state)    
+    
+def if_reef_danger(state):
+    return False # TODO: check for danger of running aground
+
+actcat_ship_drift = [
+{Cmd.prereq: [is_ship, if_drifting], Cmd.effects: [], Cmd.command: [cmd_efx_end_drift, cmd_efx_resolve_conflict], Cmd.action: "The ship drifted with the tide.<PAR>"},
+#{Cmd.prereq: [], Cmd.effects: [], Cmd.command: [], Cmd.action: ""},
+#{Cmd.prereq: [], Cmd.effects: [], Cmd.command: [], Cmd.action: ""},
+#{Cmd.prereq: [], Cmd.effects: [], Cmd.command: [], Cmd.action: ""},                     
+]
+
+
+
+
+
+
+
+
+
+
+
 
 actcat_ship_grounded = [
 #{Cmd.prereq: [respond_start_pull_off], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>With the anchor secured, the messenger was run out and the capstan manned."},                 

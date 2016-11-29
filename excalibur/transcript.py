@@ -17,7 +17,7 @@ import details
 postprocessing_table = {
 "the_call_went_out": ["the call went out", "sang out <THE BOATSWAIN>", "cried <THE BOATSWAIN>", "was the call", "came the cry", "said <THE BOATSWAIN>, though it hardly took a keen eye to see it: the #sailors# could feel the strain"],
 "the_crew_pushed": ["and the crew pushed around with a will", "accompanied by the clank of the pawl", "the great cable hauled by the messenger as it was driven by the capstan", "by the sweat and strain of the crew as they pushed","and the crew heaved again","with another heave on the capstan", "followed by the crew grunting as they gave the capstan another mighty shove"],
-"sailors":["sailors","tars"],
+"sailors":["sailors","tars","crew","sea dogs","hands","mariners","salts","sailors","swabbies","sailors","tars","pirates","hearties","able hands","fo'castle"],
 "catting_1":["It took only a little more effort to bring the anchor up from the water, and the #sailors# completed the job with gusto.","Then the anchor flukes scraped and banged against the bow timbers.","With one last strain on the capstan, the anchor was brought to the cathead.", ""],
 "catting_2":["#sailors.capitalize# rushed to cat the anchor.","The anchor was soon secured to the cathead.","Once the anchor was catted, the #sailors# stowed the capstan bars again.",""],
 "catting_3":["The #ship_type# was alive and in motion.","The voyage was now properly begun.","The ship felt freer and lighter, as if it was glad to get underway.","","",""],
@@ -26,6 +26,9 @@ postprocessing_table = {
 "weigh_anchor_short_stay": ["#the_crew_pushed.capitalize#, the anchor cable drawing taut.","\"At short stay,\" #the_call_went_out#, #the_crew_pushed#.", "The anchor cable was hauled aboard, #the_crew_pushed#.", "The cable drew taut, prompting the call: \"At short stay.\"","With each heave on the capstan, the ship was pulled closer to the anchor."],
 "weigh_anchor_up_and_down": ["Below the waves, the anchor began to shift, the top lifting off the seafloor, #the_crew_pushed#.","\"Up and down,\" #the_call_went_out#, as the anchor pulled vertical, still in contact with the seafloor.","The anchor's tilt prompted <THE BOATSWAIN> to sing out, \"Up and down!\"","\"Up and down,\" #the_call_went_out#, and the crew knew the end of their task was near."],
 "weigh_anchor_anchors_aweigh": ["And at last <THE BOATSWAIN> called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
+"hawsehole": ["as the hawsehole was uncapped","while the #sailors# lay to uncapping the cathole","while <crewmember> uncovered the hawsehole"],
+"hawser_laid_out": ["the cable was laid out on the deck", "<THE BOATSWAIN> supervised laying out the hawser","the #sailors# made ready the hawser","the #sailors# made ready to loose the anchor","the anchor waited as the #sailors# lay to","the anchor was loosed from the cathead"],
+
 }
 
 def interpertTranscript(script):
@@ -69,10 +72,12 @@ command_table = {
 "<PAR> <PAR>": lambda c, a, t: "\n\n",
 "<PAR>": lambda c, a, t: "\n\n",
 "<THE BOATSWAIN>": character.find_character_name,
+"<THE CAPTAIN>": character.find_character_name,
 "<CREWMEMBER>": character.find_character_name,
 "<THE BOATSWAIN'S>": character.find_character_name_pos_adj,
 "<SHANTY>": details.singShanty
 }    
+command_table.update({"<CREWMEMBER2>": lambda c, a, t: character.find_character_name(c, a, t, exclude=command_table["<CREWMEMBER>"])})
 
 def interpertCommand(command, actor, target):
     result = command
@@ -107,14 +112,17 @@ def transcribeCommands(text, actor, target):
 def interpertString(text, actor, target):
     if not isinstance(text, str):
         return str(text)
+    if "" == text:
+        return text
     text = transcribeCommands(text, actor, target)
     grammar = tracery.Grammar(postprocessing_table)
     grammar.add_modifiers(base_english)
     output = grammar.flatten(str(text))
     output = transcribeCommands(output, actor, target)
     output = grammar.flatten(str(output))
-    if output[-1] in "\".?!$\n": # End of a sentence
-        output = output + " " # Add a space
+    if len(output) > 0:
+        if output[-1] in "\".?!$\n": # End of a sentence
+            output = output + " " # Add a space
     # TODO: combine quotes together and break on speaker change
     return output
     

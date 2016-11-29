@@ -8,7 +8,7 @@ import book
 protagonist = character.generatePirateShip()
 antagonist = character.generateTheSea()
 con = action_commands.Conflict(action_commands.actcat_ship_voyage, protagonist, antagonist)
-for i in range(30):
+for i in range(70):
     con.performActions()
     print(con.currentState())
     print("===")

@@ -93,3 +93,4 @@ excalibur/data/gutenberg/
 *.pickle
 excalibur/incidential/
 excalibur/tex2pdf*
+excalibur/data/corpora/gutenberg/non/

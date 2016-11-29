@@ -434,7 +434,7 @@ def generateTheSea():
     return the_sea
     
     
-def find_character(char, actor, target):
+def find_character(char, actor, target, exclude=None, repeat=0):
     """
     Find the specified character in the actor/target subgroupings.
     Used to, for example, return the captain of a ship if we
@@ -443,18 +443,28 @@ def find_character(char, actor, target):
     if "CREWMEMBER" in char:
         if "ship" in actor.getTags():
             c = actor.getRandomCrewmember()
-            if None != c:
+            if None != c and exclude != c:
                 return c
+            if repeat > 15:
+                return c # Error out after too many loops. Should probably also throw out a warning.
+            return find_character(char, actor, target, exclude, repeat + 1)
     if "THE BOATSWAIN" in char:
         if "ship" in actor.getTags():
             c = actor.getBoatswain()
             if None != c:
                 return c
+    if "THE CAPTAIN" in char:
+        if "ship" in actor.getTags():
+            c = actor.getCaptain()
+            if None != c:
+                return c
     return char
     
-def find_character_name(char, actor, target):
-    c = find_character(char, actor, target)
+def find_character_name(char, actor, target, exclude=None, repeat=0):
+    c = find_character(char, actor, target, exclude)
     if hasattr(c, "name"):
+        if exclude == c.name and (repeat < 15):
+            return find_character(char, actor, target, exclude,repeat+1)
         return c.name
     return c
     
