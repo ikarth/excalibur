@@ -537,7 +537,7 @@ character_clothes = [
 [["coat","sash"],"#prosub.capitalize# was a splendid ruffian in a gold-laced coat of dark-blue satin with a crimson sash, a foot wide, about the waist."],
 [["weapon"],"#prosub.capitalize# wore #posadj# #actor_weapon# openly, in #gemstone.a#-studded scabbared at #posadj# waist."],
 [["weapon"],"Though #prosub# carried #actor_weapon.a#, #prosub# did not flaunt it as others did."],
-[["hat"],"#prosub.capitalize# wore no hat, though #prosub# frequently wore #flower# in #posadj# hair."]
+[["hat"],"#prosub.capitalize# wore no hat, though #prosub# frequently wore #flower.a# in #posadj# hair."]
 
 ]
 character_personality = [
