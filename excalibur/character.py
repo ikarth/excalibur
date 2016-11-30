@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import tracery
+from tracery.modifiers import base_english
 import random
+import pycorpora
+import badwords
+import itertools
 from uuid import uuid4
+import re
 
 class Character:
     def __init__(self, char_name, char_gender="female"):
@@ -20,6 +25,15 @@ class Character:
         self._weapon_tags = []
         self._character_tags = []
         self._uuid = uuid4()
+        self._description = ""
+        
+    @property
+    def description(self):
+        return self._description
+        
+    @description.setter
+    def description(self, value):
+        self._description = value
     
     def getId(self):
         return self._id
@@ -55,6 +69,9 @@ class Character:
     # Kennings = alternate ways to refer to the character
     @property
     def kennings(self):
+        kennings = []
+        kennings.append(self._full_name)
+        self._kennings = copy.deepcopy(kennings)
         return self._kennings
     
     @kennings.setter
@@ -411,6 +428,7 @@ def generatePirate():
     pirate.weapon_name = random.choice(melee_weapons_swords)
     pirate.weapon_tags = ["weapon_type_sword"]
     pirate._crew_title = "pirate"
+    pirate.description = describePirate(pirate)
     return pirate    
     
 def generatePirateShip():
@@ -473,3 +491,98 @@ def find_character_name_pos_adj(char, actor, target):
     if hasattr(c, "her"):
         return c.her
     return c
+    
+corpora_rules = {
+"flower": pycorpora.plants.flowers["flowers"],
+"common_animal": pycorpora.animals.common["animals"],
+"animal_use": ["for food","as pets","to make coats","to impress with their wealth","to eat","for their byproducts","as food","as watchguards","for their #xkcd_color# color","as symbols of #ritual_meaning#","to annoy their neighbors","because of their loud noises","as hunting beasts","and use them for divination","and claim they are edible","to eat","as <+feature tributary>tribute</+>"],
+"to_hunt": ["to hunt","to see","to sight","to see for themselves","to look for","to find","to catch","to observe"],
+"crayola_color": [c.get("color") for c in pycorpora.colors.crayola.get("colors")],
+"xkcd_color": badwords.filterNaughtyWords([c.get("color") for c in pycorpora.colors.xkcd["colors"]]),
+"ritual_meaning": list(itertools.chain.from_iterable([[c.get("name")] + c.get("synonyms") for c in pycorpora.archetypes.event["events"]])),
+"gemstone": pycorpora.materials.gemstones["gemstones"],
+"building_material": ["<+feature architecture material>{0}</+>".format(t) for t in pycorpora.materials.get_file("building-materials").get("building materials")],
+"natural_material": ["<+feature architecture material>{0}</+>".format(t) for t in pycorpora.materials.get_file("natural-materials")["natural materials"]],
+"drunkeness": pycorpora.words.states_of_drunkenness.get("states_of_drunkenness"),
+"personal_noun": pycorpora.words.personal_nouns.get("personalNouns"),
+"person_description": pycorpora.humans.descriptions.get("descriptions"),
+"occupation": pycorpora.humans.occupations.get("occupations"),
+"mood": pycorpora.humans.moods.get("moods"),
+"diagnosis": [c.get("desc") for c in pycorpora.medicine.diagnoses.get("codes")],
+"greek_titans": pycorpora.get_file("mythology/greek_titans")["greek_titans"],
+"vegetable": pycorpora.foods.vegetables.get("vegetables"),
+"fruit": pycorpora.foods.fruits.get("fruits"),
+"wine_taste": pycorpora.foods.wine_descriptions.get("wine_descriptions"),
+"condiment": [c.lower() for c in pycorpora.foods.condiments.get("condiments")],
+"knot": pycorpora.technology.knots.get("knots"),
+"unusual_thing": ["<+feature gemstone>#gemstone#</+>","<+feature fauna>#common_animal#</+>","<+feature fruit flora>#fruit#</+>","<+feature vegetable flora>#vegetable#</+>"],
+"a_kind_of" :["a kind of","a sort of","something resembling","what you might think of as a","something that is almost, but not entirely, unlike", "what some refer to as a", "what I would consider", "something that vaugely resembles", "a variety of", "a species of", "what some call", "something that resembles", "a local variant of", "what they refer to as","what they consider to be","a kind of","a local","a peculiar","what they call","a singular","a unique","a pungent","a strong","a thick","a bitter","a sweet","a variety of","something that resembles","something with the flavor of"],
+"heard_rumors_of":["heard could be found there","heard rumors of","once heard a tale about","heard tales they swore were true","once encountered before","remembered from past voyages","great expectations for","believed would be a sight worth seeing"],
+"sailors":["sailors","tars","pirates"],
+"isle":["isle","island","cay","key","atoll","islet","land","island","island","island","isle","isle","island"],
+"island_name_construction":["#isle.capitalize# of the #person_description.capitalizeAll# #common_animal.capitalize#","#mood.capitalize# #isle.capitalize#","The #crayola_color# Isle of #greek_titans.capitalize#","#isle.capitalize# of #greek_titans.capitalize#","#gemstone.capitalizeAll# #vegetable.capitalizeAll# #isle.capitalize#"]
+}
+    
+    
+character_clothes = [    
+[["waistcoat","breeches","hat","sash","necklace","pistols","weapon"],"#prosub.capitalize# made a gallant figure being dressed in a rich crimson waistcoat and breeches and red feather in #posadj# hat, a gold chain around #posadj# neck, with a diamond cross hanging to it, #actor_weapon.a# in #posadj# hand, and two pair of pistols hanging at the end of a silk sling flung over #posadj# shoulders according to the fashion of the pirates."],
+[["weapon","sash","pistols"],"And what a fine figure #prosub# was to be sure! What a deal of gold braid! What a fine, silver-hilted #actor_weapon#! What a gay velvet sling, hung with three silver-mounted pistols!"],
+[["beard","build","hair_color"],"A great, heavy, burly fellow, was #prosub# with a beard as black as a hat--a devil with #posadj# sword and pistol afloat, but not so black as was painted when ashore."],
+[["build"],"#prosub.capitalize# was a little, thin, wizened #actor_gender# with a very weathered look."],
+[["waistcoat","breeches","shoes"],"#prosub.capitalize# was dressed in a rusty black suit and wore #xkcd_color# yarn stockings and shoes with brass buckles."],
+[["breeches","waistcoat","shoes"],"#prosub.capitalize# was dressed in sailor fashion, with petticoat breeches of duck, a heavy pea-jacket, and thick boots, reaching to the knees."],
+[["sash", "coat", "pistol"],"#prosub.capitalize# wore a red sash tied around #posadj# waist, and, as #prosub# pushed back #posadj# coat, you might glimpse the glitter of a pistol butt."],
+[["hair_color","beard","build"],"#prosub.capitalize# was a powerful, thickset man, low-browed and bull-necked, #posadj# cheek, and chin, and throat closely covered with a stubble of blue-black beard."],
+[["hat"],"#prosub.capitalize# wore a red kerchief tied around #posadj# head and over it a cocked hat, edged with tarnished gilt braid."],
+[["coat","sash"],"#prosub.capitalize# was a splendid ruffian in a gold-laced coat of dark-blue satin with a crimson sash, a foot wide, about the waist."],
+[["weapon"],"#prosub.capitalize# wore #posadj# #actor_weapon# openly, in #gemstone.a#-studded scabbared at #posadj# waist."],
+[["weapon"],"Though #prosub# carried #actor_weapon.a#, #prosub# did not flaunt it as others did."],
+[["hat"],"#prosub.capitalize# wore no hat, though #prosub# frequently wore #flower# in #posadj# hair."]
+
+]
+character_personality = [
+[["backstory","personailty"],"#prosub.capitalize# had been known as #person_description.a# #occupation# before coming to sea, but who would recognize #proobj# now?"],
+[["personality"],"#prosub.capitalize# was noted for being frequently #mood#."],
+[["personality"],"#prosub.capitalize# had once kept a pet #common_animal#."]
+]
+    
+def describePirate(char):
+    """
+    Return a flamboyant description of the pirate in question.
+    """
+    desc_table = {}
+    desc_table["full_name"] = char.name
+    desc_table["prosub"] = char.she
+    desc_table["posadj"] = char.her
+    desc_table["proobj"] = char.him
+    desc_table["actor_weapon"] = char.weapon_name
+    desc_table["actor_gender"] = "individual"
+    if char.gender == "female":
+        desc_table["actor_gender"] = "woman"
+    if char.gender == "male":
+        desc_table["actor_gender"] = "man"
+    desc_table.update(corpora_rules)
+    gram = tracery.Grammar(desc_table)
+    gram.add_modifiers(base_english)
+    description = ""
+    excludetags = []
+    if char.gender != "male":
+        excludetags.append("beard")
+    character_desc_table = []
+    character_desc_table.extend(character_clothes)
+    character_desc_table.extend(character_personality)
+    loop_count = 0
+    while loop_count < 3:
+        valid_desc = [d for d in character_desc_table if len(set(d[0]).intersection(set(excludetags))) <= 0]
+        if len(valid_desc) > 0:
+            newdesc = random.choice(valid_desc)
+            excludetags.extend(newdesc[0])
+            description = (description + " " + str(newdesc[1])).strip()
+        loop_count += 1
+        
+    description = re.sub("</\+>", "", description)
+    description = re.sub("#prosub", "#full_name", description, count=1)
+        
+    
+    description = gram.flatten(description)
+    return description
