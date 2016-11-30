@@ -2,13 +2,42 @@
 
 import tracery
 from tracery.modifiers import base_english
-import random
+import numpy.random
 import pycorpora
 import badwords
 import itertools
 import places
 from uuid import uuid4
 import re
+import copy
+import weakref
+import pprint
+
+_char_random = numpy.random.RandomState()
+
+_character_list = []
+
+def getCharacterList():
+    clist = [c() for c in _character_list if (c() is not None)]
+    return clist
+    
+def getCharacterByUUID(id_string):
+    clist = getCharacterList()
+    charl = [c for c in clist if str(c.uuid) == str(id_string)]
+    if len(charl) > 0:
+        # TODO: see what happens if there are multiple copies of a character...
+        return charl[0]
+    return None
+    
+def getDescriptionById(id_string):
+    char = getCharacterByUUID(id_string)
+    if char:
+        return char.description
+    return None
+    
+def addToCharacterList(char):
+    global _character_list
+    _character_list.append(weakref.ref(char))
 
 class Character:
     def __init__(self, char_name, char_gender="female"):
@@ -28,6 +57,35 @@ class Character:
         self._uuid = uuid4()
         self._description = ""
         self._favorite_food = ""
+        self._adjective = ""
+        self._attribute = "strength"
+        self._weapon_sound = "clash"
+        self._armor = "vest"
+        self._ship_reference = None
+        self._ship_name = ""
+        addToCharacterList(self)
+        
+    @property
+    def ship_type(self):
+        if self._ship_reference() is not None:
+           return self._ship_reference().ship_type
+        return None
+    
+    @property
+    def armor(self):
+        return self._armor
+        
+    @property
+    def attribute(self):
+        return self._attribute
+
+    @property
+    def weapon_sound(self):
+        return self._weapon_sound # TODO: this should really come from the weapon tags
+        
+    @property
+    def uuid(self):
+        return self._uuid
         
     @property
     def description(self):
@@ -68,11 +126,27 @@ class Character:
     def gender(self, value):
         self._gender = value
     
+    @property
+    def kenning(self):
+        return _char_random.choice(self.kennings)
+        
     # Kennings = alternate ways to refer to the character
     @property
     def kennings(self):
         kennings = []
         kennings.append(self._full_name)
+        if self._nickname != "":
+            kennings.append(self._nickname)
+        if self._family_name != "":
+            kennings.append(self._family_name)
+        if self._given_name != "":
+            kennings.append(self._given_name)
+        if self._adjective != "":
+            kennings.append("the " + str(self._adjective) + " sailor")
+        if self._crew_title != "":
+            kennings.append("the " + str(self._crew_title))
+        if self._crew_title != "" and self._weapon_name != "":
+            kennings.append("the " + str(self._weapon_name) + "-weilding " + str(self._crew_title))
         self._kennings = copy.deepcopy(kennings)
         return self._kennings
     
@@ -123,75 +197,75 @@ class Character:
     # Pronoun Object
     @property
     def him(self):
-        if self.gender is "female" or self.gender is "ship":
+        if self.gender == "female" or self.gender == "ship":
             return "her"
-        if self.gender is "first_plural":
+        if self.gender == "first_plural":
             return "us"
-        if self.gender is "third_plural":
+        if self.gender == "third_plural":
             return "them"
-        if self.gender is "neuter":
+        if self.gender == "neuter":
             return "it"
-        if self.gender is "first":
+        if self.gender == "first":
             return "me"
         return "him"
     
     # Possessive Pronoun
     @property
     def his(self):
-        if self.gender is "female" or self.gender is "ship":
+        if self.gender == "female" or self.gender == "ship":
             return "hers"
-        if self.gender is "first_plural":
+        if self.gender == "first_plural":
             return "ours"
-        if self.gender is "third_plural":
+        if self.gender == "third_plural":
             return "theirs"
-        if self.gender is "neuter":
+        if self.gender == "neuter":
             return "its"
-        if self.gender is "first":
+        if self.gender == "first":
             return "mine"
         return "his"
     
     # Pronoun Subject
     @property
     def she(self):
-        if self.gender is "female" or self.gender is "ship":
+        if self.gender == "female" or self.gender == "ship":
             return "she"
-        if self.gender is "first_plural":
+        if self.gender == "first_plural":
             return "we"
-        if self.gender is "third_plural":
+        if self.gender == "third_plural":
             return "they"
-        if self.gender is "neuter":
+        if self.gender == "neuter":
             return "it"
-        if self.gender is "first":
+        if self.gender == "first":
             return "I"
         return "he"
     
     # Possessive Adjective
     @property
     def her(self):
-        if self.gender is "female" or self.gender is "ship":
+        if self.gender == "female" or self.gender == "ship":
             return "her"
-        if self.gender is "first_plural":
+        if self.gender == "first_plural":
             return "our"
-        if self.gender is "third_plural":
+        if self.gender == "third_plural":
             return "their"
-        if self.gender is "neuter":
+        if self.gender == "neuter":
             return "its"
-        if self.gender is "first":
+        if self.gender == "first":
             return "my"
         return "his"
     
     # Reflexive Pronouns
     @property
     def herself(self):
-        if self.gender is "female" or self.gender is "ship":
+        if self.gender == "female" or self.gender == "ship":
             return "herself"
-        if self.gender is "first_plural":
+        if self.gender == "first_plural":
             return "ourselves"
-        if self.gender is "third_plural":
+        if self.gender == "third_plural":
             return "themselves"
-        if self.gender is "neuter":
+        if self.gender == "neuter":
             return "itself"
-        if self.gender is "first":
+        if self.gender == "first":
             return "myself"
         return "himself"
         
@@ -238,6 +312,10 @@ class Ship(Character):
         return self._ship_id
 
     @property
+    def ship_type(self):
+        return self._ship_type
+        
+    @property
     def id(self):
         return self._ship_id
         
@@ -255,6 +333,8 @@ class Ship(Character):
         
     def addCrew(self,crew_member):
         crew_member.ship_id = self._ship_id
+        crew_member._ship_name = self._ship_name
+        crew_member._ship_reference = weakref.ref(self)
         self._crew.addCrew(crew_member)
         
     def findInCrew(self, crewtag):
@@ -283,7 +363,7 @@ class Ship(Character):
         return swain
         
     def getRandomCrewmember(self):
-        return random.choice(self._crew.getCrew())
+        return _char_random.choice(self._crew.getCrew())
             
         
     
@@ -404,20 +484,20 @@ melee_weapons_swords=["sword","cutlass","rapier","khopesh","sabre","estoc","clay
         
 
 def generatePirate():
-    westeast = random.choice(["western_family_name","western_family_name","eastern_family_name"])
-    gender = random.choice(["male","female"])
+    westeast = _char_random.choice(["western_family_name","western_family_name","eastern_family_name"])
+    gender = _char_random.choice(["male","female"])
     name_gender = "{0}_given_names".format(gender)
-    given_name = random.choice(pirate_name_rules[name_gender])
-    family_name = random.choice(pirate_name_rules[westeast])
-    pirate_title = random.choice(pirate_name_rules["pirate_titles"])
-    pirate_title = random.choice(["{0}","{0}","{0}","{0}","{0}","{0} {2}", "{0} {2}","{0} {1}", "{2} {1}", "{2} {3}", "{3} {1}", "{0}-{3}"]).format(pirate_title, family_name, given_name, random.choice(pirate_name_rules["pirate_titles"]))
-    namestring = random.choice(["{0} \"{1}\" {2}","{0} \"{1}\" {2}","{0} {2}","{0} \"{1}\" {2}","{0} {2}","{0}","{2}","{1}","\"{1}\"", "\"{1}\" {0}", "\"{1}\" {2}"])
+    given_name = _char_random.choice(pirate_name_rules[name_gender])
+    family_name = _char_random.choice(pirate_name_rules[westeast])
+    pirate_title = _char_random.choice(pirate_name_rules["pirate_titles"])
+    pirate_title = _char_random.choice(["{0}","{0}","{0}","{0}","{0}","{0} {2}", "{0} {2}","{0} {1}", "{2} {1}", "{2} {3}", "{3} {1}", "{0}-{3}"]).format(pirate_title, family_name, given_name, _char_random.choice(pirate_name_rules["pirate_titles"]))
+    namestring = _char_random.choice(["{0} \"{1}\" {2}","{0} \"{1}\" {2}","{0} {2}","{0} \"{1}\" {2}","{0} {2}","{0}","{2}","{1}","\"{1}\"", "\"{1}\" {0}", "\"{1}\" {2}"])
     fullname = namestring.format(family_name, pirate_title, given_name)
-    if westeast is "western_family_name":
+    if westeast == "western_family_name":
         fullname = namestring.format(given_name, pirate_title, family_name)
     plain_namestring = namestring.replace("\"","").replace("{1}","").replace("  "," ").strip()
     plainname = plain_namestring.format(family_name, pirate_title, given_name)
-    if westeast is "western_family_name":
+    if westeast == "western_family_name":
         plainname = plain_namestring.format(given_name, pirate_title, family_name)
     if "" == plainname:
         plainname = fullname
@@ -427,16 +507,16 @@ def generatePirate():
     pirate._family_name = family_name
     pirate._plain_name = plainname
     pirate._name_style = westeast
-    pirate.weapon_name = random.choice(melee_weapons_swords)
+    pirate.weapon_name = _char_random.choice(melee_weapons_swords)
     pirate.weapon_tags = ["weapon_type_sword"]
     pirate._crew_title = "pirate"
-    pirate._favorite_food = random.choice(places.getCuisine())
+    pirate._favorite_food = _char_random.choice(places.getCuisine())
     pirate.description = describePirate(pirate)
     return pirate    
     
 def generatePirateShip():
-    pick_ship_template = random.choice([s for s in ship_templates if ("pirate" in s["uses"])])
-    pirate_ship_name = random.choice(ship_names["pirate"])
+    pick_ship_template = _char_random.choice([s for s in ship_templates if ("pirate" in s["uses"])])
+    pirate_ship_name = _char_random.choice(ship_names["pirate"])
     pirate_ship = Ship(pirate_ship_name, pick_ship_template)
     pirate_captain = generatePirate()
     pirate_captain._crew_title = "captain"
@@ -448,6 +528,12 @@ def generatePirateShip():
         pirate_ship.addCrew(pirate)
     pirate_ship.addTag("ship")
     return pirate_ship
+    
+def generateMerchantShip():
+    pick_ship_template = _char_random.choice([s for s in ship_templates if ("merchant" in s["uses"])])
+    ship_name = _char_random.choice(ship_names["merchant"])
+    ship = Ship(ship_name, pick_ship_template)
+    return ship
     
 def generateTheSea():
     the_sea = Character("the sea", "neuter")
@@ -480,19 +566,19 @@ def find_character(char, actor, target, exclude=None, repeat=0):
             if None != c:
                 return c
     return char
-    
+
 def find_character_name(char, actor, target, exclude=None, repeat=0):
     c = find_character(char, actor, target, exclude)
     if hasattr(c, "name"):
         if exclude == c.name and (repeat < 15):
             return find_character(char, actor, target, exclude,repeat+1)
-        return c.name
+        return "(variable {0}){1}|{2}(/)".format(c.uuid, c.kenning, c.she)
     return c
     
 def find_character_name_pos_adj(char, actor, target):
     c = find_character(char, actor, target)
     if hasattr(c, "her"):
-        return c.her
+        return "(variable {0}){1}'s|{2}(/)".format(c.uuid, c.kenning, c.her)
     return c
     
 corpora_rules = {
@@ -530,7 +616,7 @@ corpora_rules = {
 character_clothes = [    
 [["waistcoat","breeches","hat","sash","necklace","pistols","weapon"],"#prosub.capitalize# made a gallant figure being dressed in a rich crimson waistcoat and breeches and red feather in #posadj# hat, a gold chain around #posadj# neck, with a diamond cross hanging to it, #actor_weapon.a# in #posadj# hand, and two pair of pistols hanging at the end of a silk sling flung over #posadj# shoulders according to the fashion of the pirates."],
 [["weapon","sash","pistols"],"And what a fine figure #prosub# was to be sure! What a deal of gold braid! What a fine, silver-hilted #actor_weapon#! What a gay velvet sling, hung with three silver-mounted pistols!"],
-[["beard","build","hair_color"],"A great, heavy, burly fellow, was #prosub# with a beard as black as a hat--a devil with #posadj# sword and pistol afloat, but not so black as was painted when ashore."],
+[["beard","build","hair_color"],"A great, heavy, burly fellow was #prosub#, with a beard as black as a hat--a devil with #posadj# sword and pistol afloat, but not so black as was painted when ashore."],
 [["build"],"#prosub.capitalize# was a little, thin, wizened #actor_gender# with a very weathered look."],
 [["waistcoat","breeches","shoes"],"#prosub.capitalize# was dressed in a rusty black suit and wore #xkcd_color# yarn stockings and shoes with brass buckles."],
 [["breeches","waistcoat","shoes"],"#prosub.capitalize# was dressed in sailor fashion, with petticoat breeches of duck, a heavy pea-jacket, and thick boots, reaching to the knees."],
@@ -540,7 +626,7 @@ character_clothes = [
 [["coat","sash"],"#prosub.capitalize# was a splendid ruffian in a gold-laced coat of dark-blue satin with a crimson sash, a foot wide, about the waist."],
 [["weapon"],"#prosub.capitalize# wore #posadj# #actor_weapon# openly, in #gemstone.a#-studded scabbared at #posadj# waist."],
 [["weapon"],"Though #prosub# carried #actor_weapon.a#, #prosub# did not flaunt it as others did."],
-[["weapon"],"#posadj# #actor_weapon#, once belonged to #posadj# mother, and #prosub# kept it in memory of her."],
+[["weapon"],"#posadj.capitalize# #actor_weapon# once belonged to #posadj# mother, and #prosub# kept it in memory of her."],
 [["hat"],"#prosub.capitalize# wore no hat, though #prosub# frequently wore #flower.a# in #posadj# hair."]
 
 ]
@@ -550,6 +636,8 @@ character_personality = [
 [["personality"],"#prosub.capitalize# had once kept a pet #common_animal#."],
 [["personality"],"#posadj.capitalize# favorite food is #actor_favorite_food#."],
 ]
+
+pp = pprint.PrettyPrinter(indent=3)
     
 def describePirate(char):
     """
@@ -581,13 +669,20 @@ def describePirate(char):
     while loop_count < 3:
         valid_desc = [d for d in character_desc_table if len(set(d[0]).intersection(set(excludetags))) <= 0]
         if len(valid_desc) > 0:
-            newdesc = random.choice(valid_desc)
+            #pp.pprint(valid_desc)
+            idx = _char_random.choice(range(len(valid_desc)))
+            newdesc = valid_desc[idx]
             excludetags.extend(newdesc[0])
             description = (description + " " + str(newdesc[1])).strip()
         loop_count += 1
         
     description = re.sub("</\+>", "", description)
-    description = re.sub("#prosub", "#full_name", description, count=1)
+    first_mention = re.search("#prosub|#posadj", description)
+    if first_mention:
+        if "prosub" in first_mention.group():
+            description = re.sub("#prosub(.*?)#", "#full_name\g<1>#", description, count=1)
+        else:
+            description = re.sub("#posadj(.*?)#", "#full_name\g<1>#'s", description, count=1)
         
     
     description = gram.flatten(description)

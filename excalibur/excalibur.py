@@ -20,10 +20,10 @@ script = con.outputTranscript()
 output = transcript.compileTranscript(script)
 output = transcript.makeTitlePageFromShip(script) + "\n" + output
 
-for i in places.getArchipegalo():
-    print("___...ttt...____")
-    print(i.get("uuid"))
-    print(places.getPlaceName(i))
+#for i in places.getArchipegalo():
+#    print("___...ttt...____")
+#    print(i.get("uuid"))
+#    print(places.getPlaceName(i))
     
     #print(places.getPlaceDescription(i))
 

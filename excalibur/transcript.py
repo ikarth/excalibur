@@ -12,6 +12,66 @@ from tracery.modifiers import base_english
 import character
 from action_commands import Cmd
 import details
+import re
+import copy
+
+def cleanMetadata(text, actor, target):
+    clean_text = re.sub("<v_(.*?) (.*?)>(.*?)</>", "(variable \g<2>)\g<3>(/)", text)
+    return clean_text
+
+first_mention = {}    
+    
+def interpertMetadata(text, actor, target):
+    """
+    Interpert the metadata sent from the action variables.
+    
+    Also inject descriptions and do some last-minute cleanup.
+    """
+    continue_search = True
+    global first_mention
+    last_actor_id = ""
+    mtext = copy.deepcopy(text)
+    while continue_search:
+        next_tag = re.search("\(variable (.*?)\)(.*?)\(/\)", mtext)
+        if next_tag:
+            tag_uuid = next_tag.group(1)
+            tag_text = next_tag.group(2)
+            tag_split = re.search("(.*?)\|(.*)", tag_text)
+            if tag_split:
+                if last_actor_id == tag_uuid:
+                    tag_text = tag_split.group(2)
+                else:
+                    tag_text = tag_split.group(1)
+            mtext = mtext[:next_tag.start()] + tag_text + mtext[next_tag.end():]
+            
+            last_actor_id = tag_uuid
+            
+#            next_actor_tag = re.search("\(variable (.*?)\)(.*?)\(/\)", mtext)
+#            if next_actor_tag:
+#                if re.search("\n", mtext[:next_tag.end()]).end() < next_actor_tag.end():
+#                    last_actor_id = tag_uuid
+#                else:
+#                    last_actor_id = ""
+
+            # at first mention, inject description in next paragraph
+            if not first_mention.get(tag_uuid):
+                first_mention[tag_uuid] = next_tag.end()
+                insert_place = re.finditer("\n", mtext)
+                pos = None
+                for ip in insert_place:
+                    if (pos == None):
+                        if ip.end() > next_tag.end():
+                            pos = ip.end()
+                if pos == None:
+                    pos = len(mtext)
+                char_description = character.getDescriptionById(tag_uuid)
+                mtext = mtext[:pos] + "\n" + char_description + "\n\n" + mtext[pos:]
+        else:
+            continue_search = False
+    mtext = re.sub("\r\n", "\n", mtext, re.MULTILINE)                    
+    mtext = re.sub("\n ([a-zA-Z\"])", "\n\g<1>", mtext, re.MULTILINE)        
+    mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
+    return mtext
 
 
 postprocessing_table = {
@@ -36,19 +96,22 @@ def interpertTranscript(script):
     actor = script.get(Cmd.current_actor)
     target = script.get(Cmd.current_target)
     output = ""
-    for line in text:
-        output = output + interpertLine(line, actor, target)
-    return output
+    if isinstance(text, str):
+        output = interpertLine(text, actor, target)
+    else:
+        for line in text:
+            output = output + interpertLine(line, actor, target)
+    return interpertMetadata(output, actor, target)
 
 def interpertLine(text, actor, target):
     if hasattr(text, "get"): # is a complete transcript
         return interpertTranscript(text)
     if isinstance(text, str):
-        return interpertString(text, actor, target)
+        return interpertString(cleanMetadata(text, actor, target), actor, target)
     if hasattr(text, "index"):
         output = ""
         for line in text:
-            output += interpertLine(line, actor, target)
+            output += interpertLine(cleanMetadata(line, actor, target), actor, target)
         return output
     return str("=> {0}\n".format(str(text)))
         
@@ -68,16 +131,17 @@ def indexCommands(text):
     return command_indexes
 
 command_table = {
-"<PAR><PAR>": lambda c, a, t: "\n\n",
-"<PAR> <PAR>": lambda c, a, t: "\n\n",
-"<PAR>": lambda c, a, t: "\n\n",
+#"<PAR> <PAR>": lambda c, a, t: "<PAR><PAR>",
+#"<PAR><PAR>": lambda c, a, t: "\n\n",
+#"<PAR>": lambda c, a, t: "\n\n",
 #"<DESCRIBE: DESTINATION NAME>": lambda c, a, t: place.placeName(place.findPlace(character.findDestination(c, a, t))),
 #"<DESCRIBE: DESTINATION DESCRIPTION>": lambda c, a, t: place.placeDescription(place.findPlace(character.findDestination(c, a, t))),
 #"<DESCRIBE: LOCATION DESCRIPTION>": lambda c, a, t: place.placeDescription(place.findPlace(character.findLocation(c, a, t))),
-"<THE BOATSWAIN>": character.find_character_name,
-"<THE CAPTAIN>": character.find_character_name,
-"<CREWMEMBER>": character.find_character_name,
-"<THE BOATSWAIN'S>": character.find_character_name_pos_adj,
+"<THE BOATSWAIN>": lambda c, a, t: character.find_character_name(c, a, t),
+"<THE BOATSWAIN SHE>": lambda c, a, t: character.find_character_name(c, a, t),
+"<THE CAPTAIN>": lambda c, a, t: character.find_character_name(c, a, t),
+"<CREWMEMBER>": lambda c, a, t: character.find_character_name(c, a, t),
+"<THE BOATSWAIN'S>": lambda c, a, t: character.find_character_name_pos_adj(c, a ,t),
 "<SHANTY>": details.singShanty
 }    
 command_table.update({"<CREWMEMBER2>": lambda c, a, t: character.find_character_name(c, a, t, exclude=command_table["<CREWMEMBER>"])})
@@ -117,7 +181,21 @@ def interpertString(text, actor, target):
         return str(text)
     if "" == text:
         return text
+    text = re.sub("<PAR> *?<PAR>","<PAR>", text)
+    text = re.sub("<PAR>","\n\n", text)
+    text = re.sub("\n\n\n*?","\n\n", text)
+    text = re.sub("<VOYAGE.*?>","",text)
+    text = re.sub("<END.*?>","",text)
+    text = re.sub("<BEGIN.*?>","",text)
+    text = re.sub("<.*?END>","",text)
+    text = re.sub("<.*?BEGIN>","",text)
     text = transcribeCommands(text, actor, target)
+    local_table = postprocessing_table
+    local_ship_type = []
+    if actor != None:
+        if actor.ship_type != None:
+            local_ship_type = [actor.ship_type]
+    postprocessing_table["ship"] = ["ship","vessel"]#,str(actor._ship_name)].extend(local_ship_type)
     grammar = tracery.Grammar(postprocessing_table)
     grammar.add_modifiers(base_english)
     output = grammar.flatten(str(text))
@@ -162,6 +240,11 @@ title: {0}
 subtitle: |
 {1}
 author: |
+
+
+
+
+
    Isaac Karth  
    &
    Excalibur 2016  
@@ -170,6 +253,7 @@ copyright: |
    Copyright Isaac Karth 2016  
    isaackarth.com  
    procedural-generation.tumblr.com  
+   
    The Fell Types are digitally reproduced by Igino Marini. www.iginomarini.com  
 
 ...
@@ -184,4 +268,10 @@ copyright: |
 
     
 def compileTranscript(story_transcript):
-    return interpertLine(story_transcript, None, None)
+    mtext = interpertLine(story_transcript, None, None)
+    mtext = re.sub("\r\n", "\n", mtext, re.MULTILINE)                    
+    mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
+    mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
+    mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
+    mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
+    return mtext

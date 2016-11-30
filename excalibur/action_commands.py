@@ -49,31 +49,34 @@ def findIdTagInState(tag, state):
     
 def buildTranslationTable(actor, target, state=None):
     ttable = []
-    if None != actor and None != target:
-        ttable.append(["<ACTOR>", actor.name])
+    if None != actor:
+        ttable.append(["<ACTOR>", "<v_act_pronoun {0}>{1}|{2}</>".format(actor.uuid, actor.kenning, actor.she)])
+        ttable.append(["<ACTOR_WEAPON>", "<v_actor_weapon {0}>{1}</>".format(actor.uuid, actor.weapon_name)])
+        ttable.append(["<ACTOR'S>", "<v_actor_possessive {0}>{1}|{2}</>".format(actor.uuid, actor.possessive, actor.her)])
+        ttable.append(["<ACTOR_HIM>", "<v_actor_pronoun {0}>{1}</>".format(actor.uuid, actor.him)])
+        ttable.append(["<ACTOR_HER>", "<v_actor_pronoun {0}>{1}</>".format(actor.uuid, actor.him)])
+        ttable.append(["<ACTOR_SELF>", "<v_actor_reflexive {0}>{1}</>".format(actor.uuid, actor.herself)])
+        ttable.append(["<ACTOR_ATTRIBUTE>", actor.attribute])
+        ttable.append(["<ACTOR_WEAPON_SOUND>", actor.weapon_sound])
+    if None != target:
         #TODO: move these to Transcript, expand handling
-        ttable.append(["<ANTAGONIST>", target.name])
-        ttable.append(["<ACTOR_WEAPON>", actor.weapon_name])
-        ttable.append(["<ANTAGONIST_WEAPON>", target.weapon_name])
-        ttable.append(["<TARGET_WEAPON>", target.weapon_name])
-        ttable.append(["<ANTAGONIST'S>", target.possessive])
-        ttable.append(["<TARGET>", target.name])
-        ttable.append(["<TARGET'S>", target.possessive])
-        ttable.append(["<ACTOR'S>", actor.possessive])
-        ttable.append(["<TARGET_HIM>", target.him])
-        ttable.append(["<ACTOR_HIM>", actor.him])
-        ttable.append(["<ANTAGONIST_HER>", target.him])
-        ttable.append(["<ANTAGONIST_HIM>", target.him])
-        ttable.append(["<TARGET_HER>", target.him])
-        ttable.append(["<ACTOR_HER>", actor.him])
-        ttable.append(["<TARGET_SELF>", target.herself])
-        ttable.append(["<TARGET_SELF>", target.herself])
-        ttable.append(["<ACTOR_SELF>", actor.herself])
-    # TODO: replace the following with actual lookups
-    ttable.append(["<ACTOR_ATTRIBUTE>", "skill"])
-    ttable.append(["<TARGET_ATTRIBUTE>", "strength"])
-    ttable.append(["<ACTOR_WEAPON_SOUND>", "clank"])
-    ttable.append(["<ANTAGONIST_ARMOR>", "leather cap"])
+        ttable.append(["<ANTAGONIST>", "<v_target_pronoun {0}>{1}|{2}</>".format(target.uuid, target.name, target.kennings)])
+        ttable.append(["<ANTAGONIST_WEAPON>", "<v_target_weapon {0}>{1}</>".format(target.uuid, target.weapon_name)])
+        ttable.append(["<TARGET_WEAPON>", "<v_target_weapon {0}>{1}</>".format(target.uuid, target.weapon_name)])
+        ttable.append(["<ANTAGONIST'S>", "<v_target_possessive {0}>{1}|{2}</>".format(target.uuid, target.possessive,target.her)])
+        ttable.append(["<TARGET>", "<v_target_pronoun {0}>{1}|{2}</>".format(target.uuid, target.name, target.she)])
+        ttable.append(["<TARGET'S>", "<v_target_possessive {0}>{1}</>".format(target.uuid, target.possessive,target.her)])
+        ttable.append(["<TARGET_HIM>", "<v_target_pronoun {0}>{1}</>".format(target.uuid, target.him)])
+        ttable.append(["<ANTAGONIST_HER>", "<v_target_pronoun {0}>{1}</>".format(target.uuid, target.him)])
+        ttable.append(["<ANTAGONIST_HIM>", "<v_target_pronoun {0}>{1}</>".format(target.uuid, target.him)])
+        ttable.append(["<TARGET_HER>", "<v_target_pronoun {0}>{1}</>".format(target.uuid, target.him)])
+        ttable.append(["<ANTAGONIST_SELF>", "<v_target_reflexive {0}>{1}</>".format(target.uuid, target.herself)])
+        ttable.append(["<TARGET_SELF>", "<v_target_reflexive {0}>{1}</>".format(target.uuid, target.herself)])
+        ttable.append(["<ANTAGONIST_ARMOR>", target.armor])
+        ttable.append(["<TARGET_ARMOR>", target.armor])
+        ttable.append(["<TARGET_ATTRIBUTE>", target.attribute])
+
+
     if None != state:
         ttable.append(["<DESCRIBE: LOCATION NAME>", 
                        places.getPlaceName(places.findPlaceById(findIdTagInState(expandTag("location <ACTOR SHIP>: ", actor, target), state)))])
@@ -94,7 +97,7 @@ def translateActionDescription(action, specific_item=None, state=None):
     actor = action.get(Cmd.current_actor)
     target = action.get(Cmd.current_target)
     action_string = action.get(Cmd.action)
-    if not (specific_item is None):
+    if (specific_item != None):
         action_string = specific_item
     if hasattr(action_string, "get"):
         if action_string.get(Cmd.transcript) != None:
@@ -163,7 +166,7 @@ class ActionProcessor:
                 if Cmd.effects in act:
                     for efx in act[Cmd.effects]:
                         get_effect_bag = efx({"action": act, "tags": effect_bag})
-                        if not get_effect_bag is None:
+                        if get_effect_bag != None:
                             effect_bag = get_effect_bag
                 effect_bag = +effect_bag # remove zero and negative counts
                 for efx in list(effect_bag): # some signals decay over time...
@@ -237,7 +240,7 @@ def expandTagFromState(tag, state):
     return expandTag(tag, state["actor"], state["target"])
     
 def expandTagFromAction(tag, state):
-    if state is None:
+    if state == None:
         return tag
     return expandTag(tag, state["action"][Cmd.current_actor], state["action"][Cmd.current_target])    
 
@@ -283,7 +286,7 @@ class Conflict:
         self.action_processor.addAction(action)
         
     def currentParentState(self):
-        if self._parent_conflict is None:
+        if self._parent_conflict == None:
             return self.currentState()
         return self._parent_conflict().currentParentState()
         
@@ -964,7 +967,7 @@ weigh_anchor_actcat = [
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
 #pulling at the capstan
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# pressed their broad chests against the powerful levers, planted their feet firmly upon the deck, straightened out their backs, and slowly pawl after pawl was gained."},
-{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "<PAR>\"That's your sort, my hearties,\" exclaimed <THE BOATSWAIN> encouragingly, as <THE BOATSWAIN> applied <THE BOATSWAIN'S> tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!\""},
+{Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "<PAR>\"That's your sort, my hearties,\" exclaimed <THE BOATSWAIN> encouragingly, as <THE BOATSWAIN SHE> applied <THE BOATSWAIN'S> tremendous strength to the outer extremity of one of the bars, \"heave with a will! heave, and she _must_ come! _heave_, all of us!! now--one--_two_--three!!!\""},
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The #sailors# strained at the bars, the pawl clicking as they drove the capstan round."},
 {Cmd.prereq: [is_ship, if_turning_capstan], Cmd.effects: [efx_turn_capstan], Cmd.action: "The chorus of the shanty kept time with the clicks of the pawl."},
 #sing a shanty
@@ -1187,11 +1190,11 @@ def efx_temp_skip_weigh_anchor(state):
 # efx_set_random_destination, efx_clear_location, efx_set_random_location        
 # Voyage: Ship vs. the Sea
 actcat_ship_voyage = [
-{Cmd.prereq: [is_ship, not_voyaging, if_no_destination], Cmd.effects: [efx_temp_voyage_start], Cmd.command: [cmd_efx_set_random_location, cmd_efx_set_random_destination], Cmd.action: "<TEMP: RANDOM DESTINATION>"},
+{Cmd.prereq: [is_ship, not_voyaging, if_no_destination], Cmd.effects: [efx_temp_voyage_start], Cmd.command: [cmd_efx_set_random_location, cmd_efx_set_random_destination], Cmd.action: ""},
 # Start the voyage
 {Cmd.prereq: [is_ship, not_voyaging, if_in_harbor, not_at_destination, if_destination_overseas], Cmd.effects: [efx_voyage_begins], Cmd.action: "<VOYAGE: BEGIN_VOYAGE>"},
 # Weigh Anchor
-{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<PAR> <VOYAGE: WEIGH ANCHOR><PAR>"},
+{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<VOYAGE: WEIGH ANCHOR><PAR>"},
 #{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_temp_skip_weigh_anchor], Cmd.command: [], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<PAR> <VOYAGE: WEIGH ANCHOR><PAR>"},
 # Leave the harbor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "<VOYAGE: LEAVE HARBOR>"},
@@ -1327,13 +1330,14 @@ def cmd_efx_start_drift(actproc):
     return # TODO    
 
 #Conrad
-"BEFORE an anchor can ever be raised, it must be let go; and this perfectly obvious truism brings me at once to the subject of the degradation of the sea language in the daily press of this country.<PAR>Your journalist, whether he takes charge of a ship or a fleet, almost invariably \"casts\" his anchor.  Now, an anchor is never cast, and to take a liberty with technical language is a crime against the clearness, precision, and beauty of perfected speech.An anchor is a forged piece of iron, admirably adapted to its end, and technical language is an instrument wrought into perfection by ages of experience, a flawless thing for its purpose.  An anchor of yesterday (because nowadays there are contrivances like mushrooms and things like claws, of no particular expression or shape—just hooks)—an anchor of yesterday is in its way a most efficient instrument.  To its perfection its size bears witness, for there is no other appliance so small for the great work it has to do.  Look at the anchors hanging from the cat-heads of a big ship!  How tiny they are in proportion to the great size of the hull!  Were they made of gold they would look like trinkets, like ornamental toys, no bigger in proportion than a jewelled drop in a woman’s ear.  And yet upon them will depend, more than once, the very life of the ship.<PAR>An anchor is forged and fashioned for faithfulness; give it ground that it can bite, and it will hold till the cable parts, and then, whatever may afterwards befall its ship, that anchor is \"lost.\"  The honest, rough piece of iron, so simple in appearance, has more parts than the human body has limbs: the ring, the stock, the crown, the flukes, the palms, the shank.  All this, according to the journalist, is \"cast\" when a ship arriving at an anchorage is brought up.<PAR>This insistence in using the odious word arises from the fact that a particularly benighted landsman must imagine the act of anchoring as a process of throwing something overboard, whereas the anchor ready for its work is already overboard, and is not thrown over, but simply allowed to fall.  It hangs from the ship’s side at the end of a heavy, projecting timber called the cat-head, in the bight of a short, thick chain whose end link is suddenly released by a blow from a top-maul or the pull of a lever when the order is given.  And the order is not \"Heave over!\" as the paragraphist seems to imagine, but \"Let go!\""
+
 
      
 actcat_ship_drop_anchor = [
 #{Cmd.prereq: [is_ship, not_anchor_aweigh, not_begin_mooring], Cmd.effects: [efx_test_mooring], Cmd.action: "TEST"},                           
 {Cmd.prereq: [is_ship, if_anchor_aweigh, if_mooring_ship, not_begin_mooring], Cmd.effects: [efx_begin_mooring], Cmd.action: ["<crewmember> was sent below to fetch the hawser.", "<crewmember> and <crewmember2> were sent below to fetch the hawser.","The #sailors# prepared to moor the #ship#.","The #ship# was made ready for the mooring.","<THE CAPTAIN> gave the order to moor the ship."]},
 {Cmd.prereq: [is_ship, if_mooring_ship, if_begin_mooring, if_enough_anchors], Cmd.effects: [], Cmd.command: [cmd_efx_end_mooring_ship, cmd_efx_resolve_conflict], Cmd.action: "<PAR><MOORING SHIP: END>"},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["<PAR>BEFORE an anchor can ever be raised, it must be let go; and this perfectly obvious truism brings me at once to the subject of the degradation of the sea language in the daily press of this country.<PAR>Your journalist, whether he takes charge of a ship or a fleet, almost invariably \"casts\" his anchor.  Now, an anchor is never cast, and to take a liberty with technical language is a crime against the clearness, precision, and beauty of perfected speech.An anchor is a forged piece of iron, admirably adapted to its end, and technical language is an instrument wrought into perfection by ages of experience, a flawless thing for its purpose.  An anchor of yesterday (because nowadays there are contrivances like mushrooms and things like claws, of no particular expression or shape—just hooks)—an anchor of yesterday is in its way a most efficient instrument.  To its perfection its size bears witness, for there is no other appliance so small for the great work it has to do.  Look at the anchors hanging from the cat-heads of a big ship!  How tiny they are in proportion to the great size of the hull!  Were they made of gold they would look like trinkets, like ornamental toys, no bigger in proportion than a jewelled drop in a woman’s ear.  And yet upon them will depend, more than once, the very life of the ship.<PAR>An anchor is forged and fashioned for faithfulness; give it ground that it can bite, and it will hold till the cable parts, and then, whatever may afterwards befall its ship, that anchor is \"lost.\"  The honest, rough piece of iron, so simple in appearance, has more parts than the human body has limbs: the ring, the stock, the crown, the flukes, the palms, the shank.  All this, according to the journalist, is \"cast\" when a ship arriving at an anchorage is brought up.<PAR>This insistence in using the odious word arises from the fact that a particularly benighted landsman must imagine the act of anchoring as a process of throwing something overboard, whereas the anchor ready for its work is already overboard, and is not thrown over, but simply allowed to fall.  It hangs from the ship’s side at the end of a heavy, projecting timber called the cat-head, in the bight of a short, thick chain whose end link is suddenly released by a blow from a top-maul or the pull of a lever when the order is given.  And the order is not \"Heave over!\" as the paragraphist seems to imagine, but \"Let go!\"<PAR>"]},
 {Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#."]},
 {Cmd.prereq: [is_ship, if_mooring_ship, if_dropping_anchor_middle, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["<crewmember> attached the anchor bouy.","The #sailors# took care to stand free of the cable.",""]},
 {Cmd.prereq: [is_ship, if_mooring_ship, if_dropping_anchor_end, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["Then they let fall the anchor, and it entered the water with a spash.", "The anchor was dropped with a splash.","The anchor was dropped, the cable playing out behind it.","\"Let go!\" and down it went.", "Down went the anchor, up spashed the spray.", "The stopper rope released, the anchor dropped."]},
