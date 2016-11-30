@@ -151,7 +151,7 @@ def singShantyVerseCallAndResponse(shanty, verseno):
 
 def singShantySubset(shanty):
     verses = len(shanty["verse"])
-    verses = min(verses, 2)
+    #verses = min(verses, 2)
     singing_verses = numpy.random.choice(range(verses), size=numpy.random.randint(0, verses),replace=False)
     
     output = "\n"
@@ -287,10 +287,6 @@ describe_reef = [
 ]
 
 
-sunrise = [
-"Much has been said of the sunrise at sea; but it will not compare with the sunrise on shore. It lacks the accompaniments of the songs of birds, the awakening hum of humanity, and the glancing of the first beams upon trees, hills, spires, and house-tops, to give it life and spirit. There is no scenery. But, although the actual rise of the sun at sea is not so beautiful, yet nothing will compare for melancholy and dreariness with the early breaking of day upon \"Old Ocean's gray and melancholy waste.\"",
-"There is something in the first gray streaks stretching along the eastern horizon and throwing an indistinct light upon the face of the deep, which combines with the boundlessness and unknown depth of the sea around, and gives one a feeling of loneliness, of dread, and of melancholy foreboding, which nothing else in nature can. This gradually passes away as the light grows brighter, and when the sun comes up, the ordinary monotonous sea day begins."
-]
 
 
 cat_facts = ["<PAR>Cats have any amount of wiliness about them. A dog would scarcely think of hiding below a bush until its prey came within reach; but cats are adepts at an ambuscade. A cat knows by experience that a bird--say a sparrow--looks almost in every direction, saving directly beneath it, and so pussy always steals a march on it, from below. If a bird is foolish enough to alight on the top of a clothes-pole, pussy has a very easy victory. It is that same habit of never looking downwards, which causes those large birds, which alight on a ship's yards at sea, to be so easily captured by the sailors.<PAR>"]
@@ -302,21 +298,23 @@ sailing_unique = [
 ]
 
 sailing = [
-#sailing
+[#sunrise
+"Much has been said of the sunrise at sea; but it will not compare with the sunrise on shore. It lacks the accompaniments of the songs of birds, the awakening hum of humanity, and the glancing of the first beams upon trees, hills, spires, and house-tops, to give it life and spirit. There is no scenery. But, although the actual rise of the sun at sea is not so beautiful, yet nothing will compare for melancholy and dreariness with the early breaking of day upon \"Old Ocean's gray and melancholy waste.\"",
+"There is something in the first gray streaks stretching along the eastern horizon and throwing an indistinct light upon the face of the deep, which combines with the boundlessness and unknown depth of the sea around, and gives one a feeling of loneliness, of dread, and of melancholy foreboding, which nothing else in nature can. This gradually passes away as the light grows brighter, and when the sun comes up, the ordinary monotonous sea day begins."
+],           
+[#sailing
 "With a favorable wind, they proceeded eastward for three days, and then they encountered a great wind. ",
 "On the sea hereabouts there are many pirates, to meet with whom is speedy death. ",
 "The great ocean spreads out, a boundless expanse. ",
 "There is no knowing east or west; only by observing the sun, moon, and stars was it possible to go forward. ",
-"The sea was deep and bottomless, and there was no place where they could drop anchor and stop. ",
-# overcast, no navigation...
+"The sea was deep and bottomless, and there was no place where they could drop anchor and stop. "],
+[# overcast, no navigation...
 "If the weather were dark and rainy, the ship went as she was carried by the wind, without any definite course. ",
 "In the darkness of the night, only the great waves were to be seen, breaking on one another, and emitting a brightness like that of fire, with huge turtles and other monsters of the deep all about. ",
 "But when the sky became clear, they could tell east and west, and the ship again went forward in the right direction. ",
 "If she had come on any hidden rock, there would have been no way of escape.",
-"At this time the sky continued very dark and gloomy, and the sailing-masters looked at one another and made mistakes. ",
-# land lubbers aboard
-"The #lubbers# were full of terror, not knowing where they were going. "
-# clear skies
+"At this time the sky continued very dark and gloomy, and the sailing-masters looked at one another and made mistakes. "],
+[# clear skies
 "The sky presented a clear expanse of the most delicate blue, except along the skirts of the horizon, where you might see a thin drapery of pale clouds which never varied their form or colour. ",
 "The long, measured, dirge-like well of the #ocean_sea_name# came rolling along, with its surface broken by little tiny waves, sparkling in the sunshine. ",
 "Every now and then a shoal of flying fish, scared from the water under the bows, would leap into the air, and fall the next moment like a shower of silver into the sea. ",
@@ -324,10 +322,9 @@ sailing = [
 "Far off, the lofty jet of the whale might be seen, and nearer at hand the prowling shark, that villainous footpad of the seas, would come skulking along, and, at a wary distance, regard us with his evil eye. ",
 "At times, some shapeless monster of the deep, floating on the surface, would, as we approached, sink slowly into the blue waters, and fade away from the sight. ",
 "But the most impressive feature of the scene was the almost unbroken silence that reigned over sky and water. ",
-"Scarcely a sound could be heard but the occasional breathing of the grampus, and the rippling at the cut-water. ",
+"Scarcely a sound could be heard but the occasional breathing of the grampus, and the rippling at the cut-water. "]
+]
 
-
-           ]
            
            
          

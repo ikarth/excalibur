@@ -4,12 +4,12 @@ import character
 import action_commands
 import transcript
 import book
-import places
+
 
 protagonist = character.generatePirateShip()
 antagonist = character.generateTheSea()
 con = action_commands.Conflict(action_commands.actcat_ship_voyage, protagonist, antagonist)
-for i in range(300):
+for i in range(3000):
     con.performActions()
     print(con.currentState())
     print("===")

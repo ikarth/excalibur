@@ -449,7 +449,7 @@ pirate_name_rules={"western_family_name":["Rackham","Boyah","al Hurra",
 "Hawkins","Easton","van Hoorn""Henriques","Hein","de Berry","Bellamy",
 "Hornigold","Mason","Every","Braziliano","Marks","Marley","Hill","Silver",
 "Pew","Bones","Flint"],
-"eastern_family_name":["Shirahama","Lim","Chui","Gan","Liang","Wang","Zheng",
+"eastern_family_name":["Shirahama","Lim","Chui","Gan","Liang","Zheng",
 "Zheng","Cai","Cheung","Ching","Shap","Chui","Lai","Fuma"],
 "pirate_titles":["Calico Jack","Calico","Caesar","Blackbeard","Reis",
 "Barbarossa","Redbeard","Patch","Sealegs","Firebrand","Tarpit","Drowner",
@@ -573,6 +573,14 @@ def find_character_name(char, actor, target, exclude=None, repeat=0):
         if exclude == c.name and (repeat < 15):
             return find_character(char, actor, target, exclude,repeat+1)
         return "(variable {0}){1}|{2}(/)".format(c.uuid, c.kenning, c.she)
+    return c
+    
+def find_character_name_capitalize(char, actor, target, exclude=None, repeat=0):
+    c = find_character(char, actor, target, exclude)
+    if hasattr(c, "name"):
+        if exclude == c.name and (repeat < 15):
+            return find_character(char, actor, target, exclude,repeat+1)
+        return "(variable {0}){1}|{2}(/)".format(c.uuid, str(c.kenning).capitalize(), c.she)
     return c
     
 def find_character_name_pos_adj(char, actor, target):

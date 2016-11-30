@@ -44,7 +44,9 @@ corpora_rules = {
 "heard_rumors_of":["heard could be found there","heard rumors of","once heard a tale about","heard tales they swore were true","once encountered before","remembered from past voyages","great expectations for","believed would be a sight worth seeing"],
 "sailors":["sailors","tars","pirates"],
 "isle":["isle","island","cay","key","atoll","islet","land","island","island","island","isle","isle","island"],
-"island_name_construction":["#isle.capitalize# of the #person_description.capitalizeAll# #common_animal.capitalize#","#mood.capitalize# #isle.capitalize#","The #crayola_color# Isle of #greek_titans.capitalize#","#isle.capitalize# of #greek_titans.capitalize#","#gemstone.capitalizeAll# #vegetable.capitalizeAll# #isle.capitalize#"]
+"island_name_construction":["#isle.capitalize# of the #person_description.capitalizeAll# #common_animal.capitalize#","#mood.capitalize# #isle.capitalize#","The #crayola_color# Isle of #greek_titans.capitalize#","#isle.capitalize# of #greek_titans.capitalize#","#gemstone.capitalizeAll# #vegetable.capitalizeAll# #isle.capitalize#"],
+"inhabitants":["inhabitants","those who live there","inhabitants","island-dwellers","people","inhabitants","people of that place","islanders"],
+"ocean_sea_name":["the great sea","the grand line","the ocean blue","the ocean sea","the world-ocean","the silver-sparkling sea","the distant sea","the wine-dark sea"],
 }
 
 #landscape
@@ -52,9 +54,9 @@ island_desc_flora = ["There is a flower there, a species of <+feature flora flow
 island_desc_fauna = ["That place is known for a rare kind of <+feature fauna>#xkcd_color# #common_animal#</+>.","The #sailors# were eager #to_hunt# the <+feature fauna>#common_animal#</+>, which they had #heard_rumors_of#."]
 island_desc_rumors_and_legends = ["Whenever they visit this island, #sailors# will conduct a kind of ritual, which they claim symbolizes <+feature ritual>#ritual_meaning#</+>.","The #sailors# told stories of #unusual_thing.a# from the island, which they had #heard_rumors_of#."]
 #cuisine
-island_desc_condiment = ["The inhabitants use #a_kind_of# <+feature condiment>#condiment#</+> in their cooking.", "The food of that island is characterized by #a_kind_of# <+feature condiment>#condiment#</+>.","The inhabitants have #a_kind_of# <+feature condiment>#condiment# made from the #fruit#</+> of that island.","The inhabitants' cooking is characterized by <+feature condiment>#condiment# with #wine_taste.a# flavor</+>.","The cuisine of that island is known for #a_kind_of# <+feature condiment>#wine_taste# #condiment#</+>."]
+island_desc_condiment = ["The #inhabitants# use #a_kind_of# <+feature condiment>#condiment#</+> in their cooking.", "The food of that island is characterized by #a_kind_of# <+feature condiment>#condiment#</+>.","The #inhabitants# have #a_kind_of# <+feature condiment>#condiment# made from the #fruit#</+> of that island.","The #inhabitants#' cooking is characterized by <+feature condiment>#condiment# with #wine_taste.a# flavor</+>.","The cuisine of that island is known for #a_kind_of# <+feature condiment>#wine_taste# #condiment#</+>."]
 #domestication
-island_desc_domestication = ["The inhabitants raise #common_animal.s#, #animal_use#.",
+island_desc_domestication = ["The #inhabitants# raise #common_animal.s#, #animal_use#.",
 "The <+feature inhabitants>inhabitants</+> are known for their <+feature skills>fishing skills</+>.",
 "The <+feature inhabitants>inhabitants</+> live off of <+feature flora fruit>coconuts</+> and <+feature resource>fish</+>.",
 ]
@@ -90,7 +92,9 @@ island_desc_clime = [
 "The climate is <+feature climate>pleasant</+>, modified by the southeast trade winds for about nine months of the year with moderate rainfall.",
 ]
 
-
+describe_reef = [
+"<+feature do_not_repeat></+>The <+feature no_mountains no_hills landscape reefs>reefs</+> were not dry in any part, with the exception of some small black lumps, which at a distance resembled the round heads of penguins; the sea broke upon the edges, but inside the water was smooth, and of a light green colour. The water was very clear round the edges of the reef, and there was presented to view a new creation: new to those land-dwellers who observed it, but imitative of the old. There were wheat sheaves, mushrooms, stags horns, cabbage leaves, and a variety of other forms, glowing under water with vivid tints of every shade betwixt green, purple, brown, and white; equalling in beauty and excelling in grandeur the most favourite parterre of the curious florist. These were different species of coral and fungus, growing, as it were, out of the solid rock, and each had its peculiar form and shade of colouring; but whilst contemplating the richness of the scene, one could not long forget with what destruction it was pregnant. Different corals in a dead state, concreted into a solid mass of a dull-white colour, composed the stone of the reef. The penguin heads were lumps which stood higher than the rest; and being generally dry, were blackened by the weather; but even in these, the forms of the different corals, and some shells were distinguishable.",
+"<+feature do_not_repeat></+>The edges of the <+feature no_mountains no_hills reefs landscape>reef</+>, but particularly on the outside where the sea broke, were the highest parts; within, there were pools and holes containing live corals, sponges, and sea eggs and cucumbers;^[* What we called sea cucumbers, from their shape, appears to have been the bêche de mer, or trepang; of which the Chinese make a soup, much esteemed in that country for its supposed invigorating qualities.] and many enormous cockles (chama gigas) were scattered upon different parts of the reef. At low water, this cockle seems most commonly to lie half open; but frequently closes with much noise; and the water within the shells then spouts up in a stream, three or four feet high: it was from this noise and the spouting of the water, that the #sailors# discovered them, for in other respects they were scarcely to be distinguished from the coral rock. A number of these cockles were taken on board the ship, and stewed in the coppers; but they were too rank to be agreeable food, and were eaten by few. One of them weighed 47½ lbs. as taken up, and contained 3lbs. 2 oz. of meat; but this size is much inferior to what was found by #famous_explorer#, upon the reefs of the coast further northward, or to several in the #British_Museum#; and I have since seen single shells more than four times the weight of the above shells and fish taken together. There were various small channels amongst the reefs, some of which led to the outer breakers, and through these the tide was rushing in; but none appeared to be an opening sufficiently wide for the #ship#."]
 
 
 
@@ -149,6 +153,7 @@ island_content = [
 {"tags":["arrival"],              "importance": 15,"content": island_desc_arrival},
 {"tags":["shape"],                "importance": 9,"content": island_desc_shape},
 {"tags":["landscape"],            "importance": 8,"content": island_desc_soil},
+{"tags":["landscape"],            "importance": 8,"content": describe_reef},
 {"tags":[],                       "importance": 8,"content": island_desc_clime},
 {"tags":["history"],              "importance": 1,"content": island_history},
 {"tags":["no_inhabitants"],       "importance": 6,"content": island_desc_no_inhabitants},
@@ -317,7 +322,7 @@ def compareTags(current_tags, new_tags):
 
     
 
-#test_string = numpy.random.choice(["The inhabitants use #a_kind_of# <+feature condiment>#condiment#</+> in their cooking.", "The food of that island is characterized by #a_kind_of# <+feature condiment>#condiment#</+>.","They have #a_kind_of# <+feature condiment>#condiment# made from the #fruit#</+> of that island.","Their cooking is characterized by <+feature condiment>#condiment# with #wine_taste.a# flavor</+>.","The cuisine of that island is known for #a_kind_of# <+feature condiment>#wine_taste# #condiment#</+>."])
+#test_string = numpy.random.choice(["The #inhabitants# use #a_kind_of# <+feature condiment>#condiment#</+> in their cooking.", "The food of that island is characterized by #a_kind_of# <+feature condiment>#condiment#</+>.","They have #a_kind_of# <+feature condiment>#condiment# made from the #fruit#</+> of that island.","Their cooking is characterized by <+feature condiment>#condiment# with #wine_taste.a# flavor</+>.","The cuisine of that island is known for #a_kind_of# <+feature condiment>#wine_taste# #condiment#</+>."])
 #test = island_grammar.flatten(test_string)
 #print(test)
 #tags = harvestTagsFromDescription(test)

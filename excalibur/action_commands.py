@@ -956,12 +956,12 @@ weigh_anchor_actcat = [
 {Cmd.prereq: [is_ship, not_turning_capstan, not_weighing_anchor_end, if_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_signal_start_weigh_anchor], Cmd.action: "<BEGIN: WEIGH ANCHOR>"},
 {Cmd.prereq: [is_ship, if_weighing_anchor_end, not_weighing_anchor, if_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_anchor_aweigh, cmd_efx_resolve_conflict], Cmd.action: "<END: WEIGH ANCHOR>"},
 # clear the deck, make ready
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The crew #adjectively# cleared the capstan and made ready to weigh anchor."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The crew dutifully cleared the capstan and made ready to weigh anchor."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The order was given, and soon the messenger was run out and the capstan manned."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_start_weigh_anchor], Cmd.effects: [efx_signal_prepare_capstan], Cmd.action: "<PAR>The capstan was made ready. The bars unstowed, the #sailors# took up the preparation of unmooring the #ship#."},
 # capstan bars fitted to capstan
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember> fitted the bars, and the #sailors# took their positions around the capstan."},
-{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember> took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember.capitalize> fitted the bars, and the #sailors# took their positions around the capstan."},
+{Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "<Crewmember.capitalize> took the bars from where they were stowed, and the #sailors# fitted them to the capstan."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "\"Take your positions, you #sailors#,\" said <THE BOATSWAIN>."},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "There came soon the familiar racket of making sail and trimming yards and the clank of the capstan pawls. "},
 {Cmd.prereq: [is_ship, not_turning_capstan, respond_prepare_capstan], Cmd.effects: [efx_begin_turning_capstan], Cmd.action: "The capstan bars were now fully manned."},
@@ -1186,6 +1186,7 @@ def efx_temp_skip_weigh_anchor(state):
     effects[expandTagFromAction("anchor aweigh <ACTOR SHIP>", state)] = 1
     effects[expandTagFromAction("anchors moored <ACTOR SHIP>", state)] = 0
     return effects
+ 
     
 # efx_set_random_destination, efx_clear_location, efx_set_random_location        
 # Voyage: Ship vs. the Sea
@@ -1197,11 +1198,13 @@ actcat_ship_voyage = [
 {Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [], Cmd.command: [cmd_efx_weigh_anchor], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<VOYAGE: WEIGH ANCHOR><PAR>"},
 #{Cmd.prereq: [is_ship, if_voyaging, not_weighing_anchor_end, not_at_destination, not_begin_weighing_anchor, not_weighing_anchor, not_anchor_aweigh], Cmd.effects: [efx_temp_skip_weigh_anchor], Cmd.command: [], Cmd.action: "<PAR>They made ready to leave <DESCRIBE: LOCATION NAME> and sail to <DESCRIBE: DESTINATION NAME>.<PAR> <VOYAGE: WEIGH ANCHOR><PAR>"},
 # Leave the harbor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "<VOYAGE: LEAVE HARBOR>"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, not_at_destination], Cmd.effects: [efx_leave_harbor], Cmd.action: "<VOYAGE: LEAVE HARBOR><PAR>"},
 # Sailing
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [efx_move_location_destination], Cmd.action: "<VOYAGE: SAILING>"},
 # Perilous Journey
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "<VOYAGE: PERILS AT SEA>"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "<VOYAGE: PERILS AT SEA><PAR>"},
+# Perilous Journey
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "<VOYAGE: PERILS AT SEA><PAR>"},
 # Arrive at destination, enter harbor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<VOYAGE: ENTER HARBOR><PAR>They had arrived at <DESCRIBE: LOCATION NAME>.<PAR><DESCRIBE: LOCATION DESCRIPTION>"},
 # Drop anchor
@@ -1210,7 +1213,38 @@ actcat_ship_voyage = [
  # Voyage over
 {Cmd.prereq: [is_ship, if_voyaging, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: END>"},
 {Cmd.prereq: [is_ship, not_voyaging, if_enough_anchors, not_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_voyage_begins], Cmd.command: [cmd_efx_set_random_destination], Cmd.action: "<VOYAGE: RESTART>"},
-{Cmd.prereq: [is_ship, if_voyaging, if_voyaging_canceled], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: CANCELED>"}
+{Cmd.prereq: [is_ship, if_voyaging, if_voyaging_canceled], Cmd.effects: [efx_voyage_ends], Cmd.action: "<VOYAGE: CANCELED>"},
+
+#sunrise    
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: [
+"<PAR>Much has been said of the sunrise at sea; but it will not compare with the sunrise on shore. It lacks the accompaniments of the songs of birds, the awakening hum of humanity, and the glancing of the first beams upon trees, hills, spires, and house-tops, to give it life and spirit. There is no scenery. But, although the actual rise of the sun at sea is not so beautiful, yet nothing will compare for melancholy and dreariness with the early breaking of day upon \"Old Ocean's gray and melancholy waste.\"<PAR>",
+"<PAR>There is something in the first gray streaks stretching along the eastern horizon and throwing an indistinct light upon the face of the deep, which combines with the boundlessness and unknown depth of the sea around, and gives one a feeling of loneliness, of dread, and of melancholy foreboding, which nothing else in nature can. This gradually passes away as the light grows brighter, and when the sun comes up, the ordinary monotonous sea day begins.<PAR>"
+]},
+#sailing 
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: [
+"With a favorable wind, they proceeded eastward for three days, and then they encountered a great wind. ",
+"On the sea hereabouts there are many pirates, to meet with whom is speedy death. ",
+"The great ocean spreads out, a boundless expanse. ",
+"There is no knowing east or west; only by observing the sun, moon, and stars was it possible to go forward. ",
+"The sea was deep and bottomless, and there was no place where they could drop anchor and stop. "]},
+# overcast, no navigation...
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: [
+"If the weather were dark and rainy, the ship went as she was carried by the wind, without any definite course. ",
+"In the darkness of the night, only the great waves were to be seen, breaking on one another, and emitting a brightness like that of fire, with huge turtles and other monsters of the deep all about. ",
+"But when the sky became clear, they could tell east and west, and the ship again went forward in the right direction. ",
+"If she had come on any hidden rock, there would have been no way of escape.",
+"At this time the sky continued very dark and gloomy, and the sailing-masters looked at one another and made mistakes. "]},
+# clear skies
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: [
+"The sky presented a clear expanse of the most delicate blue, except along the skirts of the horizon, where you might see a thin drapery of pale clouds which never varied their form or colour. ",
+"The long, measured, dirge-like well of the #ocean_sea_name# came rolling along, with its surface broken by little tiny waves, sparkling in the sunshine. ",
+"Every now and then a shoal of flying fish, scared from the water under the bows, would leap into the air, and fall the next moment like a shower of silver into the sea. ",
+"Then you would see the superb albicore, with his glittering sides, sailing aloft, and often describing an arc in his descent, disappear on the surface of the water. ",
+"Far off, the lofty jet of the whale might be seen, and nearer at hand the prowling shark, that villainous footpad of the seas, would come skulking along, and, at a wary distance, regard us with his evil eye. ",
+"At times, some shapeless monster of the deep, floating on the surface, would, as we approached, sink slowly into the blue waters, and fade away from the sight. ",
+"But the most impressive feature of the scene was the almost unbroken silence that reigned over sky and water. ",
+"Scarcely a sound could be heard but the occasional breathing of the grampus, and the rippling at the cut-water. "]},
+
  ]
 
 actcat_ship_leave_port = []
@@ -1337,7 +1371,8 @@ actcat_ship_drop_anchor = [
 #{Cmd.prereq: [is_ship, not_anchor_aweigh, not_begin_mooring], Cmd.effects: [efx_test_mooring], Cmd.action: "TEST"},                           
 {Cmd.prereq: [is_ship, if_anchor_aweigh, if_mooring_ship, not_begin_mooring], Cmd.effects: [efx_begin_mooring], Cmd.action: ["<crewmember> was sent below to fetch the hawser.", "<crewmember> and <crewmember2> were sent below to fetch the hawser.","The #sailors# prepared to moor the #ship#.","The #ship# was made ready for the mooring.","<THE CAPTAIN> gave the order to moor the ship."]},
 {Cmd.prereq: [is_ship, if_mooring_ship, if_begin_mooring, if_enough_anchors], Cmd.effects: [], Cmd.command: [cmd_efx_end_mooring_ship, cmd_efx_resolve_conflict], Cmd.action: "<PAR><MOORING SHIP: END>"},
-{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["<PAR>BEFORE an anchor can ever be raised, it must be let go; and this perfectly obvious truism brings me at once to the subject of the degradation of the sea language in the daily press of this country.<PAR>Your journalist, whether he takes charge of a ship or a fleet, almost invariably \"casts\" his anchor.  Now, an anchor is never cast, and to take a liberty with technical language is a crime against the clearness, precision, and beauty of perfected speech.An anchor is a forged piece of iron, admirably adapted to its end, and technical language is an instrument wrought into perfection by ages of experience, a flawless thing for its purpose.  An anchor of yesterday (because nowadays there are contrivances like mushrooms and things like claws, of no particular expression or shape—just hooks)—an anchor of yesterday is in its way a most efficient instrument.  To its perfection its size bears witness, for there is no other appliance so small for the great work it has to do.  Look at the anchors hanging from the cat-heads of a big ship!  How tiny they are in proportion to the great size of the hull!  Were they made of gold they would look like trinkets, like ornamental toys, no bigger in proportion than a jewelled drop in a woman’s ear.  And yet upon them will depend, more than once, the very life of the ship.<PAR>An anchor is forged and fashioned for faithfulness; give it ground that it can bite, and it will hold till the cable parts, and then, whatever may afterwards befall its ship, that anchor is \"lost.\"  The honest, rough piece of iron, so simple in appearance, has more parts than the human body has limbs: the ring, the stock, the crown, the flukes, the palms, the shank.  All this, according to the journalist, is \"cast\" when a ship arriving at an anchorage is brought up.<PAR>This insistence in using the odious word arises from the fact that a particularly benighted landsman must imagine the act of anchoring as a process of throwing something overboard, whereas the anchor ready for its work is already overboard, and is not thrown over, but simply allowed to fall.  It hangs from the ship’s side at the end of a heavy, projecting timber called the cat-head, in the bight of a short, thick chain whose end link is suddenly released by a blow from a top-maul or the pull of a lever when the order is given.  And the order is not \"Heave over!\" as the paragraphist seems to imagine, but \"Let go!\"<PAR>"]},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#.","#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#.","#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#.","<PAR>Before an anchor can ever be raised, it must be let go; and this perfectly obvious truism brings me at once to the subject of the degradation of the sea language in the daily press of this country.<PAR>Your journalist, whether he takes charge of a ship or a fleet, almost invariably \"casts\" his anchor.  Now, an anchor is never cast, and to take a liberty with technical language is a crime against the clearness, precision, and beauty of perfected speech.An anchor is a forged piece of iron, admirably adapted to its end, and technical language is an instrument wrought into perfection by ages of experience, a flawless thing for its purpose.  An anchor of yesterday (because nowadays there are contrivances like mushrooms and things like claws, of no particular expression or shape—just hooks)—an anchor of yesterday is in its way a most efficient instrument.  To its perfection its size bears witness, for there is no other appliance so small for the great work it has to do.  Look at the anchors hanging from the cat-heads of a big ship!  How tiny they are in proportion to the great size of the hull!  Were they made of gold they would look like trinkets, like ornamental toys, no bigger in proportion than a jewelled drop in a woman’s ear.  And yet upon them will depend, more than once, the very life of the ship.<PAR>An anchor is forged and fashioned for faithfulness; give it ground that it can bite, and it will hold till the cable parts, and then, whatever may afterwards befall its ship, that anchor is \"lost.\"  The honest, rough piece of iron, so simple in appearance, has more parts than the human body has limbs: the ring, the stock, the crown, the flukes, the palms, the shank.  All this, according to the journalist, is \"cast\" when a ship arriving at an anchorage is brought up.<PAR>This insistence in using the odious word arises from the fact that a particularly benighted landsman must imagine the act of anchoring as a process of throwing something overboard, whereas the anchor ready for its work is already overboard, and is not thrown over, but simply allowed to fall.  It hangs from the ship’s side at the end of a heavy, projecting timber called the cat-head, in the bight of a short, thick chain whose end link is suddenly released by a blow from a top-maul or the pull of a lever when the order is given.  And the order is not \"Heave over!\" as the paragraphist seems to imagine, but \"Let go!\"<PAR>"]},
+{Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#."]},
 {Cmd.prereq: [is_ship, if_mooring_ship, not_dropping_anchor, if_can_drop_anchor, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["#hawsehole.capitalize#, #hawser_laid_out#.", "#hawser_laid_out.capitalize#, #hawsehole#."]},
 {Cmd.prereq: [is_ship, if_mooring_ship, if_dropping_anchor_middle, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["<crewmember> attached the anchor bouy.","The #sailors# took care to stand free of the cable.",""]},
 {Cmd.prereq: [is_ship, if_mooring_ship, if_dropping_anchor_end, if_begin_mooring, not_enough_anchors], Cmd.effects: [efx_dropping_anchor], Cmd.action: ["Then they let fall the anchor, and it entered the water with a spash.", "The anchor was dropped with a splash.","The anchor was dropped, the cable playing out behind it.","\"Let go!\" and down it went.", "Down went the anchor, up spashed the spray.", "The stopper rope released, the anchor dropped."]},

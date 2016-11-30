@@ -77,7 +77,7 @@ def interpertMetadata(text, actor, target):
 postprocessing_table = {
 "the_call_went_out": ["the call went out", "sang out <THE BOATSWAIN>", "cried <THE BOATSWAIN>", "was the call", "came the cry", "said <THE BOATSWAIN>, though it hardly took a keen eye to see it: the #sailors# could feel the strain"],
 "the_crew_pushed": ["and the crew pushed around with a will", "accompanied by the clank of the pawl", "the great cable hauled by the messenger as it was driven by the capstan", "by the sweat and strain of the crew as they pushed","and the crew heaved again","with another heave on the capstan", "followed by the crew grunting as they gave the capstan another mighty shove"],
-"sailors":["sailors","tars","crew","sea dogs","hands","mariners","salts","sailors","swabbies","sailors","tars","pirates","hearties","able hands","fo'castle"],
+"sailors":["sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sailors","tars","crew","sea dogs","hands","mariners","salts","sailors","swabbies","sailors","tars","pirates","hearties","able hands","fo'castle"],
 "catting_1":["It took only a little more effort to bring the anchor up from the water, and the #sailors# completed the job with gusto.","Then the anchor flukes scraped and banged against the bow timbers.","With one last strain on the capstan, the anchor was brought to the cathead.", ""],
 "catting_2":["#sailors.capitalize# rushed to cat the anchor.","The anchor was soon secured to the cathead.","Once the anchor was catted, the #sailors# stowed the capstan bars again.",""],
 "catting_3":["The #ship_type# was alive and in motion.","The voyage was now properly begun.","The ship felt freer and lighter, as if it was glad to get underway.","","",""],
@@ -88,7 +88,7 @@ postprocessing_table = {
 "weigh_anchor_anchors_aweigh": ["And at last <THE BOATSWAIN> called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
 "hawsehole": ["as the hawsehole was uncapped","while the #sailors# lay to uncapping the cathole","while <crewmember> uncovered the hawsehole"],
 "hawser_laid_out": ["the cable was laid out on the deck", "<THE BOATSWAIN> supervised laying out the hawser","the #sailors# made ready the hawser","the #sailors# made ready to let go the anchor","the anchor waited as the #sailors# lay to","the anchor was loosed from the cathead"],
-
+"ship_type": ["ship","ship","ship","ship","ship","ship","vessel","pirate ship","sturdy pirate ship"]
 }
 
 def interpertTranscript(script):
@@ -141,6 +141,7 @@ command_table = {
 "<THE BOATSWAIN SHE>": lambda c, a, t: character.find_character_name(c, a, t),
 "<THE CAPTAIN>": lambda c, a, t: character.find_character_name(c, a, t),
 "<CREWMEMBER>": lambda c, a, t: character.find_character_name(c, a, t),
+"<CREWMEMBER.CAPITALIZE>": lambda c, a, t: character.find_character_name_capitalize(c, a, t),
 "<THE BOATSWAIN'S>": lambda c, a, t: character.find_character_name_pos_adj(c, a ,t),
 "<SHANTY>": details.singShanty
 }    
@@ -257,6 +258,15 @@ copyright: |
    The Fell Types are digitally reproduced by Igino Marini. www.iginomarini.com  
 
 ...
+
+# Introduction
+
+{0}: {1} was created with my novel generator for the November 2016 NaNoGenMo. 
+
+You can find more information at https://github.com/ikarth/excalibur
+
+# {0}
+
 """.format(book_title, title_text)
     return frontmatter
     
@@ -270,8 +280,10 @@ copyright: |
 def compileTranscript(story_transcript):
     mtext = interpertLine(story_transcript, None, None)
     mtext = re.sub("\r\n", "\n", mtext, re.MULTILINE)                    
+    mtext = re.sub("\n\s*?\n", "\n\n", mtext, re.MULTILINE)
     mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
     mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
     mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
     mtext = re.sub("\n\n\n*", "\n\n", mtext, re.MULTILINE)
+    
     return mtext
