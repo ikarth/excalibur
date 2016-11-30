@@ -459,7 +459,17 @@ def getPlaceId(place):
     #print("===id===")
     #print(place.get("uuid"))
     return place.get("uuid")
-
+    
+def getCuisine():
+    cuisine_list = []
+    for i in getArchipegalo():
+        tags = list(itertools.chain.from_iterable([c["tags"] for c in i["description"]]))
+        #print(tags)
+        for t in tags:
+            if ("condiment" in t["type"]) or ("cuisine" in t["type"]):
+                if t["content"] != "":
+                    cuisine_list.append("{0} from {1}".format(t["content"], i["name"]))
+    return cuisine_list
 
     
 def findPlaceById(place_id):

@@ -6,6 +6,7 @@ import random
 import pycorpora
 import badwords
 import itertools
+import places
 from uuid import uuid4
 import re
 
@@ -26,6 +27,7 @@ class Character:
         self._character_tags = []
         self._uuid = uuid4()
         self._description = ""
+        self._favorite_food = ""
         
     @property
     def description(self):
@@ -428,6 +430,7 @@ def generatePirate():
     pirate.weapon_name = random.choice(melee_weapons_swords)
     pirate.weapon_tags = ["weapon_type_sword"]
     pirate._crew_title = "pirate"
+    pirate._favorite_food = random.choice(places.getCuisine())
     pirate.description = describePirate(pirate)
     return pirate    
     
@@ -537,13 +540,15 @@ character_clothes = [
 [["coat","sash"],"#prosub.capitalize# was a splendid ruffian in a gold-laced coat of dark-blue satin with a crimson sash, a foot wide, about the waist."],
 [["weapon"],"#prosub.capitalize# wore #posadj# #actor_weapon# openly, in #gemstone.a#-studded scabbared at #posadj# waist."],
 [["weapon"],"Though #prosub# carried #actor_weapon.a#, #prosub# did not flaunt it as others did."],
+[["weapon"],"#posadj# #actor_weapon#, once belonged to #posadj# mother, and #prosub# kept it in memory of her."],
 [["hat"],"#prosub.capitalize# wore no hat, though #prosub# frequently wore #flower.a# in #posadj# hair."]
 
 ]
 character_personality = [
 [["backstory","personailty"],"#prosub.capitalize# had been known as #person_description.a# #occupation# before coming to sea, but who would recognize #proobj# now?"],
 [["personality"],"#prosub.capitalize# was noted for being frequently #mood#."],
-[["personality"],"#prosub.capitalize# had once kept a pet #common_animal#."]
+[["personality"],"#prosub.capitalize# had once kept a pet #common_animal#."],
+[["personality"],"#posadj.capitalize# favorite food is #actor_favorite_food#."],
 ]
     
 def describePirate(char):
@@ -556,6 +561,7 @@ def describePirate(char):
     desc_table["posadj"] = char.her
     desc_table["proobj"] = char.him
     desc_table["actor_weapon"] = char.weapon_name
+    desc_table["actor_favorite_food"] = char._favorite_food
     desc_table["actor_gender"] = "individual"
     if char.gender == "female":
         desc_table["actor_gender"] = "woman"
