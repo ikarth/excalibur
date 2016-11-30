@@ -27,7 +27,7 @@ postprocessing_table = {
 "weigh_anchor_up_and_down": ["Below the waves, the anchor began to shift, the top lifting off the seafloor, #the_crew_pushed#.","\"Up and down,\" #the_call_went_out#, as the anchor pulled vertical, still in contact with the seafloor.","The anchor's tilt prompted <THE BOATSWAIN> to sing out, \"Up and down!\"","\"Up and down,\" #the_call_went_out#, and the crew knew the end of their task was near."],
 "weigh_anchor_anchors_aweigh": ["And at last <THE BOATSWAIN> called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
 "hawsehole": ["as the hawsehole was uncapped","while the #sailors# lay to uncapping the cathole","while <crewmember> uncovered the hawsehole"],
-"hawser_laid_out": ["the cable was laid out on the deck", "<THE BOATSWAIN> supervised laying out the hawser","the #sailors# made ready the hawser","the #sailors# made ready to loose the anchor","the anchor waited as the #sailors# lay to","the anchor was loosed from the cathead"],
+"hawser_laid_out": ["the cable was laid out on the deck", "<THE BOATSWAIN> supervised laying out the hawser","the #sailors# made ready the hawser","the #sailors# made ready to let go the anchor","the anchor waited as the #sailors# lay to","the anchor was loosed from the cathead"],
 
 }
 
