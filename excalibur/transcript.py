@@ -251,7 +251,7 @@ author: |
    Excalibur 2016  
 dedication: In Memory of AnnaLeah
 copyright: |
-   Copyright Isaac Karth 2016  
+   Isaac Karth 2016  
    isaackarth.com  
    procedural-generation.tumblr.com  
    
@@ -261,7 +261,9 @@ copyright: |
 
 # Introduction
 
-{0}: {1} was created with my novel generator for the November 2016 NaNoGenMo. 
+{0} was created with my novel generator for the November 2016 NaNoGenMo. 
+
+Contains a lot of text from various Project Gutenberg books, especially from works by Herman Melville, Joseph Conrad, and Richard Henry Dana, Jr. Though there is surprisingly very little from _Moby Dick_.
 
 You can find more information at https://github.com/ikarth/excalibur
 
