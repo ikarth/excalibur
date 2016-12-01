@@ -1206,7 +1206,7 @@ actcat_ship_voyage = [
 # Perilous Journey
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, not_at_destination], Cmd.effects: [], Cmd.action: "<VOYAGE: PERILS AT SEA><PAR>"},
 # Arrive at destination, enter harbor
-{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<PAR># <DESCRIBE: LOCATION NAME> <VOYAGE: ENTER HARBOR><PAR>They had arrived at <DESCRIBE: LOCATION NAME>.<PAR><DESCRIBE: LOCATION DESCRIPTION>"},
+{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, not_in_harbor, if_at_destination], Cmd.effects: [efx_enter_harbor], Cmd.action: "<PAR><DESCRIBE: LOCATION NAME>\n=================<PAR><VOYAGE: ENTER HARBOR>They had arrived at <DESCRIBE: LOCATION NAME>.<PAR><DESCRIBE: LOCATION DESCRIPTION>"},
 # Drop anchor
 {Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [], Cmd.command: [cmd_efx_drop_anchor], Cmd.action: "<VOYAGE: DROP ANCHOR><PAR>"},
 #{Cmd.prereq: [is_ship, if_voyaging, if_anchor_aweigh, if_in_harbor, if_at_destination], Cmd.effects: [efx_drop_anchor], Cmd.command: [], Cmd.action: "<VOYAGE: DROP ANCHOR><PAR>"},

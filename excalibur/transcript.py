@@ -88,7 +88,8 @@ postprocessing_table = {
 "weigh_anchor_anchors_aweigh": ["And at last <THE BOATSWAIN> called: \"Anchor aweigh!\"", "\"Anchor aweigh,\" #the_call_went_out#.", "The ship gave a lurch as the anchor came free of the bottom, #the_crew_pushed#.","With another shove, the anchor was free."],
 "hawsehole": ["as the hawsehole was uncapped","while the #sailors# lay to uncapping the cathole","while <crewmember> uncovered the hawsehole"],
 "hawser_laid_out": ["the cable was laid out on the deck", "<THE BOATSWAIN> supervised laying out the hawser","the #sailors# made ready the hawser","the #sailors# made ready to let go the anchor","the anchor waited as the #sailors# lay to","the anchor was loosed from the cathead"],
-"ship_type": ["ship","ship","ship","ship","ship","ship","vessel","pirate ship","sturdy pirate ship"]
+"ship_type": ["ship","ship","ship","ship","ship","ship","vessel","pirate ship","sturdy pirate ship"],
+"ocean_sea_name":["the great sea","the grand line","the ocean blue","the ocean sea","the world-ocean","the silver-sparkling sea","the distant sea","the wine-dark sea"],
 }
 
 def interpertTranscript(script):

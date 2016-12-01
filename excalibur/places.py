@@ -438,7 +438,7 @@ def generateArchipegalo():
     global _master_tag_list 
     _master_tag_list = []
     islands = []
-    for i in range(25):
+    for i in range(36):
         islands.append(generateIsland())
         masterTagList(islands)
     return islands
